@@ -5,7 +5,7 @@
 import * as _ from 'lodash'
 import { Card, Suit } from './Card'
 import { CardGroup } from './CardGroup'
-import { FullDeckGame, IGame, ShortDeckGame } from './Rule'
+import { FullDeckRule, IRule, ShortDeckRule } from './Rule'
 import { HandRank } from './HandRank'
 
 export class HandEquity {
@@ -95,12 +95,12 @@ export class OddsCalculator {
 
     iterations = iterations || 0
 
-    let game: IGame
+    let game: IRule
 
     if (gameVariant === 'short') {
-      game = new ShortDeckGame()
+      game = new ShortDeckRule()
     } else {
-      game = new FullDeckGame()
+      game = new FullDeckRule()
     }
 
     let handranks: HandRank[] = []
