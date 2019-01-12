@@ -2,53 +2,53 @@
  * Card, Rank, and Suit classes
  */
 
-interface ICardName {
-  singular: string;
-  plural: string;
+export interface ICardName {
+  singular: string
+  plural: string
 }
 
 export class Suit {
-  public static CLUB: number = 1;
-  public static DIAMOND: number = 2;
-  public static HEART: number = 3;
-  public static SPADE: number = 4;
+  public static CLUB: number = 1
+  public static DIAMOND: number = 2
+  public static HEART: number = 3
+  public static SPADE: number = 4
 
-  public static all(): number[] {
+  public static all (): number[] {
     return [
       Suit.CLUB, Suit.DIAMOND, Suit.HEART, Suit.SPADE
-    ];
+    ]
   }
 
-  public static fromString(s: string): number {
+  public static fromString (s: string): number {
     switch (s) {
       case 'c':
-        return Suit.CLUB;
+        return Suit.CLUB
       case 'd':
-        return Suit.DIAMOND;
+        return Suit.DIAMOND
       case 'h':
-        return Suit.HEART;
+        return Suit.HEART
       case 's':
-        return Suit.SPADE;
+        return Suit.SPADE
       default:
-        throw new Error(`Invalid card suit: ${s}`);
+        throw new Error(`Invalid card suit: ${s}`)
     }
   }
 }
 
 export class Rank {
-  public static TWO: number = 2;
-  public static THREE: number = 3;
-  public static FOUR: number = 4;
-  public static FIVE: number = 5;
-  public static SIX: number = 6;
-  public static SEVEN: number = 7;
-  public static EIGHT: number = 8;
-  public static NINE: number = 9;
-  public static TEN: number = 10;
-  public static JACK: number = 11;
-  public static QUEEN: number = 12;
-  public static KING: number = 13;
-  public static ACE: number = 14;
+  public static TWO: number = 2
+  public static THREE: number = 3
+  public static FOUR: number = 4
+  public static FIVE: number = 5
+  public static SIX: number = 6
+  public static SEVEN: number = 7
+  public static EIGHT: number = 8
+  public static NINE: number = 9
+  public static TEN: number = 10
+  public static JACK: number = 11
+  public static QUEEN: number = 12
+  public static KING: number = 13
+  public static ACE: number = 14
 
   public static names: ICardName[] = [
     null,
@@ -66,101 +66,101 @@ export class Rank {
     { singular: 'queen', plural: 'queens' },
     { singular: 'king', plural: 'kings' },
     { singular: 'ace', plural: 'aces' }
-  ];
+  ]
 
-  public static fromString(s: string): number {
+  public static fromString (s: string): number {
     switch (s) {
       case 't':
-        return Rank.TEN;
+        return Rank.TEN
       case 'j':
-        return Rank.JACK;
+        return Rank.JACK
       case 'q':
-        return Rank.QUEEN;
+        return Rank.QUEEN
       case 'k':
-        return Rank.KING;
+        return Rank.KING
       case 'a':
-        return Rank.ACE;
+        return Rank.ACE
       default:
-        const n: number = Number(s);
+        const n: number = Number(s)
         if (isNaN(n) || n < Rank.TWO || n > Rank.NINE) {
-          throw new Error(`Invalid card rank: ${s}`);
+          throw new Error(`Invalid card rank: ${s}`)
         }
-        return n;
+        return n
     }
   }
 
-  public all(): number[] {
+  public all (): number[] {
     return [
       Rank.TWO, Rank.THREE, Rank.FOUR, Rank.FIVE, Rank.SIX, Rank.SEVEN,
       Rank.EIGHT, Rank.NINE, Rank.TEN, Rank.JACK, Rank.QUEEN, Rank.KING, Rank.ACE
-    ];
+    ]
   }
 }
 
 export class Card {
-  protected rank: number;
-  protected suit: number;
+  protected rank: number
+  protected suit: number
 
-  public constructor(rank: number, suit: number) {
-    this.rank = rank;
-    this.suit = suit;
+  public constructor (rank: number, suit: number) {
+    this.rank = rank
+    this.suit = suit
   }
 
-  public static fromString(s: string): Card {
-    const tmp: string = s.replace(/[^a-z0-9]/gi, '');
+  public static fromString (s: string): Card {
+    const tmp: string = s.replace(/[^a-z0-9]/gi, '')
     if (tmp.length !== 2) {
-      throw new Error(`Invalid card: ${tmp}`);
+      throw new Error(`Invalid card: ${tmp}`)
     }
     return new Card(
       Rank.fromString(tmp[0].toLowerCase()),
       Suit.fromString(tmp[1].toLowerCase())
-    );
+    )
   }
 
-  public getRank(): number {
-    return this.rank;
+  public getRank (): number {
+    return this.rank
   }
 
-  public getSuit(): number {
-    return this.suit;
+  public getSuit (): number {
+    return this.suit
   }
 
-  public equals(c: Card): boolean {
-    return (this.getRank() === c.getRank() && this.getSuit() === c.getSuit());
+  public equals (c: Card): boolean {
+    return (this.getRank() === c.getRank() && this.getSuit() === c.getSuit())
   }
 
-  public toString(suit: boolean = true, full?: boolean, plural?: boolean): string {
+  public toString (suit: boolean = true, full?: boolean, plural?: boolean): string {
     if (full) {
       if (plural) {
-        return Rank.names[this.rank].plural;
+        return Rank.names[this.rank].plural
       }
-      return Rank.names[this.rank].singular;
+      return Rank.names[this.rank].singular
     }
 
-    let s: string = `${this.rank}`;
+    let s: string = `${this.rank}`
     if (this.rank === 10) {
-      s = 'T';
+      s = 'T'
     } else if (this.rank === 11) {
-      s = 'J';
+      s = 'J'
     } else if (this.rank === 12) {
-      s = 'Q';
+      s = 'Q'
     } else if (this.rank === 13) {
-      s = 'K';
+      s = 'K'
     } else if (this.rank === 14) {
-      s = 'A';
+      s = 'A'
     }
 
     if (suit) {
       if (this.suit === Suit.CLUB) {
-        s = s + 'c';
+        s = s + 'c'
       } else if (this.suit === Suit.DIAMOND) {
-        s = s + 'd';
+        s = s + 'd'
       } else if (this.suit === Suit.HEART) {
-        s = s + 'h';
+        s = s + 'h'
       } else if (this.suit === Suit.SPADE) {
-        s = s + 's';
+        s = s + 's'
       }
     }
-    return s;
+    return s
   }
 }

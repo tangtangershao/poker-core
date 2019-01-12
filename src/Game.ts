@@ -1,88 +1,178 @@
-/**
- * Game Variant Specfic Classes
- */
-import { Rank } from './Card';
+import Dealer from './Dealer'
+import { Action, Street, ActionType, Stack } from './Define'
+import Player from './Player'
+import { IRule } from './Rule'
+import { CardGroup } from '.'
 
-/**
- * GameRules base class
- */
-export interface IGame {
-  HIGH_CARD: number;
-  PAIR: number;
-  TWO_PAIRS: number;
-  TRIPS: number;
-  STRAIGHT: number;
-  FLUSH: number;
-  FULL_HOUSE: number;
-  QUADS: number;
-  STRAIGHT_FLUSH: number;
-
-  FLUSH_BEATS_FULLHOUSE: boolean;
-  A6789_STRAIGHT: boolean;
-  A2345_STRAIGHT: boolean;
-
-  rank: Rank;
+enum gameStatus{
+  NOTSTART,
+  START,
+  END
 }
 
-export class FullDeckRank extends Rank {
-  public all(): number[] {
-    return [
-      Rank.TWO, Rank.THREE, Rank.FOUR, Rank.FIVE, Rank.SIX, Rank.SEVEN,
-      Rank.EIGHT, Rank.NINE, Rank.TEN, Rank.JACK, Rank.QUEEN, Rank.KING, Rank.ACE
-    ];
+export default class Game {
+  private _dealer: Dealer
+  private _actions: Action[]
+  private _players: Player[]
+  private _startTime: Date
+  private _rule: IRule
+  private _street: Street
+  private _boardCards: CardGroup
+  private _playerFinalMoneys: {[playerId: string]: number}
+  private _buttonPlayerId: string
+  private _stack: Stack
+  private _gameStatus: gameStatus
+
+  /**
+   *
+   * @throws CanNotFindButtonPlayerError
+   * @throws PlayersIsNotEnoughForGameError
+   */
+  constructor (rule: IRule,players: Player[],stack: Stack,buttonPlayerId: string) {
+    this._dealer = new Dealer(rule)
+    this._rule = rule
+    this._players = players
+    this._startTime = new Date()
+    this._actions = []
+    this._buttonPlayerId = buttonPlayerId
+    this._stack = stack
+  }
+
+  /**
+   * get next player that need to action
+   *
+   * @returns {Player}
+   * @memberof Game
+   */
+  getNextPlayer (): Player {
+    return null
+  }
+
+  /**
+   * Player Raise
+   *
+   * @param {string} playerId
+   * @param {number} [actionAmount]
+   * @returns {Action}
+   * @throws PlayerNotHaveEnoughMoneyError
+   * @throws NotPlayerTurnToActionError
+   * @throws GameIsNotStartError
+   * @throws GameIsEndError
+   * @throws CanNotActionAtStreet
+   * @memberof Game
+   */
+  Raise (playerId: string,amount: number): Action {
+    return null
+  }
+
+  /**
+   * Player Check
+   *
+   * @param {string} playerId
+   * @returns {Action}
+   * @throws PlayerNotHaveEnoughMoneyError
+   * @throws NotPlayerTurnToActionError
+   * @throws GameIsNotStartError
+   * @throws GameIsEndError
+   * @throws CanNotActionAtStreet
+   * @memberof Game
+   */
+  Check (playerId: string): Action {
+    return null
+  }
+
+  /**
+   * Player Fold
+   *
+   * @param {string} playerId
+   * @returns {Action}
+   * @throws PlayerNotHaveEnoughMoneyError
+   * @throws NotPlayerTurnToActionError
+   * @throws GameIsNotStartError
+   * @throws GameIsEndError
+   * @throws CanNotActionAtStreet
+   * @memberof Game
+   */
+  Fold (playerId: string): Action {
+    return null
+  }
+
+  /**
+   * Player Call
+   *
+   * @param {string} playerId
+   * @returns {Action}
+   * @throws PlayerNotHaveEnoughMoneyError
+   * @throws NotPlayerTurnToActionError
+   * @throws GameIsNotStartError
+   * @throws GameIsEndError
+   * @throws CanNotActionAtStreet
+   * @memberof Game
+   */
+  Call (playerId: string): Action {
+    return null
+  }
+
+  /**
+   * Player AllIn
+   *
+   * @param {string} playerId
+   * @returns {Action}
+   * @throws PlayerNotHaveEnoughMoneyError
+   * @throws NotPlayerTurnToActionError
+   * @throws GameIsNotStartError
+   * @throws GameIsEndError
+   * @throws CanNotActionAtStreet
+   * @memberof Game
+   */
+  AllIn (playerId: string): Action {
+    return null
+  }
+
+  /**
+   * get hole cards of all players
+   * @throws GameIsNotStartError
+   * @returns {{[playerId: string]: CardGroup;}}
+   * @memberof Game
+   */
+  getHoleCards (): {[playerId: string]: CardGroup;} {
+    return null
+  }
+
+  /**
+   * start this game
+   * step.1 post sb,bb
+   * step.2 dealer shuffle
+   * step.3 dealer deal cards
+   * step.4 change gameStatus to start
+   * step.5 change street to preflop
+   * @returns {Action}
+   * @throws GameIsEndError
+   * @throws GameIsStartedError
+   * @memberof Game
+   */
+  startGame () {
+
+  }
+
+  /**
+   * end this game
+   * step.1 calculate players final money
+   * step.2 change gameStatus to end
+   * @throws GameIsEndError
+   * @throws GameIsNotStartError
+   * @memberof Game
+   */
+  endGame () {
+
   }
 }
 
-export class FullDeckGame implements IGame {
-  public HIGH_CARD: number = 1;
-  public PAIR: number = 2;
-  public TWO_PAIRS: number = 3;
-  public TRIPS: number = 4;
-  public STRAIGHT: number = 5;
-  public FLUSH: number = 6;
-  public FULL_HOUSE: number = 7;
-  public QUADS: number = 8;
-  public STRAIGHT_FLUSH: number = 9;
-
-  public FLUSH_BEATS_FULLHOUSE: boolean = false;
-  public A6789_STRAIGHT: boolean = false;
-  public A2345_STRAIGHT: boolean = true;
-
-  public rank: Rank;
-
-  constructor() {
-    this.rank = new FullDeckRank();
-  }
-}
-
-export class ShortDeckRank extends Rank {
-  public all(): number[] {
-    return [
-      Rank.SIX, Rank.SEVEN, Rank.EIGHT, Rank.NINE, Rank.TEN,
-      Rank.JACK, Rank.QUEEN, Rank.KING, Rank.ACE
-    ];
-  }
-}
-
-export class ShortDeckGame implements IGame {
-
-  public HIGH_CARD: number = 1;
-  public PAIR: number = 2;
-  public TWO_PAIRS: number = 3;
-  public TRIPS: number = 4;
-  public STRAIGHT: number = 5;
-  public FLUSH: number = 7;
-  public FULL_HOUSE: number = 6;
-  public QUADS: number = 8;
-  public STRAIGHT_FLUSH: number = 9;
-
-  public FLUSH_BEATS_FULLHOUSE: boolean = true;
-  public A6789_STRAIGHT: boolean = true;
-  public A2345_STRAIGHT: boolean = false;
-
-  public rank: Rank;
-
-  constructor() {
-    this.rank = new ShortDeckRank();
-  }
-}
+class PlayerNotHaveEnoughMoneyError extends Error {}
+class NotPlayerTurnToActionError extends Error {}
+class GameIsStartedError extends Error {}
+class GameIsNotStartError extends Error {}
+class GameIsEndError extends Error {}
+class CanNotActionAtStreetError extends Error {}
+class CanNotFindButtonPlayerError extends Error {}
+class PlayersIsNotEnoughForGameError extends Error {}
