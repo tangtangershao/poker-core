@@ -34,15 +34,15 @@ export default class Player {
     return this._misc[key]
   }
 
-  addMoney (amount:number){
-
+  addMoney (amount: number) {
+    this._money += amount
   }
 
-  deductMoney (amount:number){
-
+  deductMoney (amount: number) {
+    this._money -= amount
   }
 
-  resetMoney (amount:number) {
-
+  resetMoney (amount: number) {
+    this._money = 10000
   }
 }
