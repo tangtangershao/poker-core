@@ -54,11 +54,11 @@ export class HandEquity {
 
 export class OddsCalculator {
   public static DEFAULT_ITERATIONS: number = 100000
-  public equities: HandEquity[]
+  public equities: HandEquity[]    // 股票
   protected odds: number[]
   protected handranks: HandRank[]
-  protected iterations: number
-  protected elapsedTime: number
+  protected iterations: number    // 迭代次数
+  protected elapsedTime: number   // 运行时间
 
   protected constructor (equities: HandEquity[], handranks: HandRank[], iterations: number, elapsedTime: number) {
     this.equities = equities

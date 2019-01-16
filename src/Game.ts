@@ -1,10 +1,11 @@
 import Dealer from './Dealer'
-import { Action, Street, ActionType, Stack } from './Define'
-import Player from './Player'
+import { Action, Street, ActionType, Stack } from './Define';
+import Player from './Player';
 import { IRule } from './Rule'
 import { CardGroup } from '.'
+import { Dictionary } from 'lodash'
 
-enum gameStatus{
+enum gameStatus {
   NOTSTART,
   START,
   END
@@ -23,6 +24,11 @@ export default class Game {
   private _stack: Stack
   private _gameStatus: gameStatus
 
+  private _streetHighAmount: number // 此轮最高投入
+  private _streeLastPlayerId: string // 此轮最后行动玩家
+
+  private _playerDataDic: Dictionary<PlayerData>
+
   /**
    *
    * @throws CanNotFindButtonPlayerError
@@ -36,6 +42,8 @@ export default class Game {
     this._actions = []
     this._buttonPlayerId = buttonPlayerId
     this._stack = stack
+    this._gameStatus = gameStatus.NOTSTART
+    this._playerDataDic = {}
   }
 
   /**
@@ -45,7 +53,38 @@ export default class Game {
    * @memberof Game
    */
   getNextPlayer (): Player {
-    return null
+    let nestPlayerId = this.getNestActionPlayerId()
+    return this._playerDataDic[nestPlayerId].player
+  }
+
+  /**
+   * Player bet
+   * 
+   * @param {string} playerId
+   * @param {number} [actionAmount]
+   * @returns {Action}
+   * @throws PlayerNotHaveEnoughMoneyError
+   * @throws NotPlayerTurnToActionError
+   * @throws GameIsNotStartError
+   * @throws GameIsEndError
+   * @throws CanNotActionAtStreet
+   * @memberof Game
+   */
+  Bet (playerId: string,amount: number): Action {
+    this.canAction(playerId)
+    this.conditionAction(playerId,ActionType.BET)
+    let player = this.getPlayerData(playerId)
+    if (player.player.money > amount)
+    {
+      let action = this.recordAction(playerId,ActionType.BET,amount)
+      player.player.deductMoney(amount)
+      this._streetHighAmount = amount
+      this._streeLastPlayerId = this.getLastActionNotFold(false).playerId
+      return action
+    }else
+    {
+      throw new PlayerNotHaveEnoughMoneyError(` player  ${playerId}  money is not enough to bet  ${amount}`)
+    }
   }
 
   /**
@@ -62,7 +101,20 @@ export default class Game {
    * @memberof Game
    */
   Raise (playerId: string,amount: number): Action {
-    return null
+    this.canAction(playerId)
+    this.conditionAction(playerId,ActionType.RAISE)
+    let player = this.getPlayerData(playerId)
+    if (player.player.money > amount)
+    {
+      let action = this.recordAction(playerId,ActionType.RAISE,amount)
+      player.player.deductMoney(amount)
+      this._streetHighAmount = amount
+      this._streeLastPlayerId = this.getLastActionNotFold(true).playerId
+      return action
+    }else
+    {
+      throw new PlayerNotHaveEnoughMoneyError(` player  ${playerId}  money is not enough to raise  ${amount}`)
+    }
   }
 
   /**
@@ -78,7 +130,14 @@ export default class Game {
    * @memberof Game
    */
   Check (playerId: string): Action {
-    return null
+    this.canAction(playerId)
+    this.conditionAction(playerId,ActionType.CHECK)
+    let action = this.recordAction(playerId,ActionType.CHECK)
+    if (playerId === this._streeLastPlayerId)
+    {
+      this.changeStreet()
+    }
+    return action
   }
 
   /**
@@ -94,7 +153,15 @@ export default class Game {
    * @memberof Game
    */
   Fold (playerId: string): Action {
-    return null
+    this.canAction(playerId)
+    this.conditionAction(playerId,ActionType.FOLD)
+    let player = this.getPlayerData(playerId)
+    let action = this.recordAction(playerId,ActionType.FOLD)
+    if (playerId === this._streeLastPlayerId)
+    {
+      this.changeStreet()
+    }
+    return action
   }
 
   /**
@@ -110,7 +177,23 @@ export default class Game {
    * @memberof Game
    */
   Call (playerId: string): Action {
-    return null
+    this.canAction(playerId)
+    this.conditionAction(playerId,ActionType.CALL)
+    let player = this.getPlayerData(playerId)
+    let amount = this._streetHighAmount - player.streetAmount
+    if (player.player.money > amount)
+    {
+      let action = this.recordAction(playerId,ActionType.CALL,amount)
+      player.player.deductMoney(amount)
+      if (playerId === this._streeLastPlayerId)
+      {
+        this.changeStreet()
+      }
+      return action
+    }else
+    {
+      throw new PlayerNotHaveEnoughMoneyError(` player  ${playerId}  money is not enough to Call  ${amount}`)
+    }
   }
 
   /**
@@ -126,7 +209,18 @@ export default class Game {
    * @memberof Game
    */
   AllIn (playerId: string): Action {
-    return null
+    this.canAction(playerId)
+    this.conditionAction(playerId,ActionType.ALLIN)
+    let player = this.getPlayerData(playerId)
+    let amount = player.player.money
+    let action = this.recordAction(playerId,ActionType.CALL,amount)
+    player.player.deductMoney(amount)
+    if (amount > this._streetHighAmount)
+    {
+      this._streetHighAmount = amount
+      this._streeLastPlayerId = this.getLastActionNotFold(true).playerId
+    }
+    return action
   }
 
   /**
@@ -136,7 +230,7 @@ export default class Game {
    * @memberof Game
    */
   getHoleCards (): {[playerId: string]: CardGroup;} {
-    return null
+    return this._dealer.getDealtCards()
   }
 
   /**
@@ -151,8 +245,39 @@ export default class Game {
    * @throws GameIsStartedError
    * @memberof Game
    */
-  startGame () {
+  startGame ()
+  {
+    if (this._gameStatus === gameStatus.START)
+    {
+      throw new GameIsStartedError()
+    }else if (this._gameStatus === gameStatus.END)
+    {
+      throw new GameIsEndError()
+    }
 
+    let playerIds = []
+    for (let i = 0;i < this._players.length;i++)
+    {
+      playerIds.push(this._players[i].id)
+      this._playerDataDic[this._players[i].id] = {
+        player: this._players[i],
+        lastActType: 0,
+        index: i,
+        streetAmount: 0,
+        amount: 0
+      }
+    }
+    this.handleSBBB()
+
+    this._dealer.shuffle()
+    this._dealer.dealAll(playerIds)
+    this._gameStatus = gameStatus.START
+
+    this._street = Street.PREFLOP
+    this._streetHighAmount = ActionType.BB
+    let sbPlayer = this.getNestPlayerData(this._buttonPlayerId)
+    let bbPlayer = this.getNestPlayerData(sbPlayer.player.id)
+    this._streeLastPlayerId = bbPlayer.player.id
   }
 
   /**
@@ -165,7 +290,276 @@ export default class Game {
    */
   endGame () {
 
+    this._gameStatus = gameStatus.END
   }
+
+  /**
+   * 检查是否在游戏中
+   */
+  private checkGameStart ()
+  {
+    if(this._gameStatus === gameStatus.NOTSTART)
+    {
+      throw new GameIsNotStartError()
+    }else if (this._gameStatus === gameStatus.END)
+    {
+      throw new GameIsEndError()
+    }
+  }
+
+  /**
+   * 处理大小盲
+   */
+  private handleSBBB ()
+  {
+    let sbPlayer = this.getNestPlayerData(this._buttonPlayerId)
+    let bbPlayer = this.getNestPlayerData(sbPlayer.player.id)
+    if (sbPlayer.player.money < this._stack.sb)
+    {
+      throw new PlayersIsNotEnoughForGameError()
+    }else
+    {
+      sbPlayer.player.deductMoney(this._stack.sb)
+      let action = this.recordAction(sbPlayer.player.id,ActionType.SB,this._stack.sb)
+    }
+    if (bbPlayer.player.money < this._stack.bb)
+    {
+      throw new PlayersIsNotEnoughForGameError()
+    }else
+    {
+      bbPlayer.player.deductMoney(this._stack.bb)
+      let action = this.recordAction(bbPlayer.player.id,ActionType.BB,this._stack.bb)
+    }
+  }
+
+  /**
+   * 根据玩家id获取玩家状态信息
+   * @param playerId
+   */
+  private getPlayerData (playerId: string): PlayerData
+  {
+    return this._playerDataDic[playerId]
+  }
+
+  /**
+   * 获取下个玩家状态信息
+   * @param playerId 玩家id
+   */
+  private getNestPlayerData (playerId: string): PlayerData
+  {
+    let index = this._playerDataDic[playerId].index
+    index = index + 1
+    if (index === this._players.length) { index = 0 }
+    let nextPlayerId = this._players[index].id
+    return this._playerDataDic[nextPlayerId]
+  }
+
+  /**
+   * 获取上个玩家状态信息
+   * @param playerId 玩家id
+   */
+  private getLastPlayerData (playerId: string): PlayerData
+  {
+    let index = this._playerDataDic[playerId].index
+    index = index - 1
+    if (index === -1) { index = this._players.length - 1 }
+    let lastPlayerId = this._players[index].id
+    return this._playerDataDic[lastPlayerId]
+  }
+
+  /**
+   * 获取下个可行动玩家
+   * @param playerId  默认 最后一个行动玩家Id
+   */
+  private getNestActionPlayerId (playerId?: string): string
+  {
+    if (!playerId) { playerId = this._actions[this._actions.length - 1].playerId }
+    let nestPlayer = this.getNestPlayerData(playerId)
+    let nestPlayerId = nestPlayer.player.id
+
+    if (nestPlayerId === this._actions[this._actions.length - 1].playerId)
+    {
+      //游戏结束？？？？？？？？？？？？？？？？
+    }
+
+    if (nestPlayer.lastActType === ActionType.FOLD)
+    {
+      return this.getNestActionPlayerId(nestPlayerId)
+    }else
+    {
+      return nestPlayerId
+    }
+  }
+
+  /**
+   * 记录行动
+   * @param playerData 玩家状态信息
+   * @param actionType 行动类型
+   * @param amount 行动金额
+   */
+  private recordAction (playerId: string,actionType: ActionType,amount?: number)
+  {
+    let playerData = this._playerDataDic[playerId]
+    let action = new Action()
+    action.playerId = playerData.player.id
+    action.type = actionType
+    action.street = Street.FLOP
+    action.amount = 0
+    if (amount)
+    {
+      action.amount = amount
+    }
+    this._actions.push(action)
+    playerData.lastActType = actionType
+    let streetamount = playerData.streetAmount + action.amount
+    playerData.streetAmount = streetamount
+    return action
+  }
+
+  /**
+   * 获取上次有效行动（盖牌和每轮开始 返回空行动 因为无法用来判定下次行动）
+   */
+  private getLastActionNotFold (mustSameStreet: boolean): Action
+  {
+    for (let i = this._actions.length - 1; i > 0; i--)
+    {
+      let action = this._actions[i]
+      if (mustSameStreet)
+      {
+        if (action.street === this._street) // 同一轮
+        {
+          if (action.type !== ActionType.FOLD) { return action }
+        }
+      }else
+      {
+        if (action.type !== ActionType.FOLD && action.type !== ActionType.ALLIN) { return action }
+      }
+    }
+    return null
+  }
+
+  /**
+   * 根据上次行动类型 判定下次可行动类型列表
+   * @param actionType 上次行动类型
+   */
+  private nestActionCanDo (actionType: ActionType): number[]
+  {
+    let canActs = []
+    switch (actionType)
+    {
+      case ActionType.BET:
+      case ActionType.CALL:
+      case ActionType.RAISE:
+      case ActionType.BB:
+        canActs.push(ActionType.CALL)
+        canActs.push(ActionType.FOLD)
+        canActs.push(ActionType.RAISE)
+        canActs.push(ActionType.ALLIN)
+        break
+      case ActionType.CHECK:
+        canActs.push(ActionType.CHECK)
+        canActs.push(ActionType.FOLD)
+        canActs.push(ActionType.BET)
+        canActs.push(ActionType.ALLIN)
+        break
+      case ActionType.ALLIN:
+        canActs.push(ActionType.CALL)
+        canActs.push(ActionType.FOLD)
+        canActs.push(ActionType.RAISE)
+        canActs.push(ActionType.ALLIN)
+        break
+      case ActionType.SB:
+        break
+      case ActionType.FOLD:
+        break
+      default : // i am the first
+        canActs.push(ActionType.CHECK)
+        canActs.push(ActionType.FOLD)
+        canActs.push(ActionType.BET)
+        canActs.push(ActionType.ALLIN)
+        break
+    }
+    return canActs
+  }
+
+  /**
+   * 判定玩家可否参与行动
+   * @param playerId 玩家id
+   */
+  private canAction (playerId: string)
+  {
+    this.checkGameStart()
+    let playerData = this._playerDataDic[playerId]
+    if (playerData.lastActType === ActionType.FOLD || playerData.lastActType === ActionType.ALLIN)
+    {
+      throw new NotPlayerTurnToActionError(` player ${playerData.player.id} is fold or allin  ,can not action any more `)
+    }
+    if (this.getNestActionPlayerId() !== playerId)
+    {
+      throw new NotPlayerTurnToActionError(`nest action player is not ${playerId}`)
+    }
+  }
+
+  /**
+   * 判定玩家行动条件是否满足
+   * @param playerId 玩家id
+   * @param actionType 行动类型
+   */
+  private conditionAction (playerId: string,actionType: ActionType)
+  {
+    let lastAction = this.getLastActionNotFold(true)
+    let canActs = this.nestActionCanDo(lastAction.type)
+    let haveAct = false
+    for (let act of canActs)
+    {
+      if (actionType === act)
+      {
+        haveAct = true
+        break
+      }
+    }
+    if (!haveAct)
+    {
+      throw new CanNotActionAtStreetError(`nest action  not allowd player ${playerId} action -${actionType}`)
+    }
+  }
+
+  /**
+   * 转到下一轮
+   */
+  private changeStreet ()
+  {
+    let curStreet = this._street
+    switch (curStreet)
+    {
+      case Street.PREFLOP: this._street = Street.FLOP
+        break
+      case Street.FLOP: this._street = Street.TURN
+        break
+      case Street.TURN: this._street = Street.RIVER
+        break
+      default:
+        break
+    }
+    for (let playerId in this._playerDataDic)
+    {
+      let amoumt = this._playerDataDic[playerId].streetAmount
+      this._playerDataDic[playerId].streetAmount = 0
+      this._playerDataDic[playerId].amount = this._playerDataDic[playerId].amount + amoumt
+    }
+    this._streeLastPlayerId = ""
+    this._streetHighAmount = 0
+  }
+
+}
+
+class PlayerData
+{
+  player: Player
+  lastActType: ActionType     // 最后一次行动类型
+  index: number          // 在数组_player中的索引
+  streetAmount: number   // 此轮投入
+  amount: number         // 所有投入
 }
 
 class PlayerNotHaveEnoughMoneyError extends Error {}

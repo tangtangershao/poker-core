@@ -1,6 +1,7 @@
 
 export enum ActionType {
   BET = 1,
+  CALL,
   RAISE,
   ALLIN,
   FOLD,
@@ -13,7 +14,7 @@ export enum Street {
   PREFLOP = 1,
   FLOP,
   TURN,
-  RIVER,
+  RIVER
 }
 
 export class Action {
@@ -21,6 +22,7 @@ export class Action {
   amount?: number
   street: Street
   time: Date
+  playerId: string
 
   /**
    *

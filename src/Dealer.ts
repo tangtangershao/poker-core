@@ -8,9 +8,8 @@ export default class Dealer {
 
   private rule: IRule
 
-  private boardCards: CardGroup
   private allCards: CardGroup
-
+  private boardCards: CardGroup
   private playerCards: Dictionary <CardGroup>
   private isDealAll = false
 
