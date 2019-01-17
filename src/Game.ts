@@ -2,8 +2,10 @@ import Dealer from './Dealer'
 import { Action, Street, ActionType, Stack } from './Define';
 import Player from './Player';
 import { IRule } from './Rule'
-import { CardGroup } from '.'
+import { CardGroup, HandRank } from '.'
 import { Dictionary } from 'lodash'
+import  * as _ from 'lodash'
+import { OddsCalculator } from './OddsCalculator';
 
 enum gameStatus {
   NOTSTART,
@@ -27,7 +29,7 @@ export default class Game {
   private _streetHighAmount: number // 此轮最高投入
   private _streeLastPlayerId: string // 此轮最后行动玩家
 
-  private _playerDataDic: Dictionary<PlayerData>
+  private _playerDataDic: {[playerId: string]: PlayerData}
 
   /**
    *
@@ -180,7 +182,7 @@ export default class Game {
     this.canAction(playerId)
     this.conditionAction(playerId,ActionType.CALL)
     let player = this.getPlayerData(playerId)
-    let amount = this._streetHighAmount - player.streetAmount
+    let amount = this._streetHighAmount - player.streetBetAmount
     if (player.player.money > amount)
     {
       let action = this.recordAction(playerId,ActionType.CALL,amount)
@@ -263,8 +265,10 @@ export default class Game {
         player: this._players[i],
         lastActType: 0,
         index: i,
-        streetAmount: 0,
-        amount: 0
+        streetBetAmount: 0,
+        betAmount: 0,
+        handRank: null,
+        pondGet: 0
       }
     }
     this.handleSBBB()
@@ -289,7 +293,8 @@ export default class Game {
    * @memberof Game
    */
   endGame () {
-
+    this.setPlayerHandRank()
+    this.calculatorPond()
     this._gameStatus = gameStatus.END
   }
 
@@ -411,8 +416,8 @@ export default class Game {
     }
     this._actions.push(action)
     playerData.lastActType = actionType
-    let streetamount = playerData.streetAmount + action.amount
-    playerData.streetAmount = streetamount
+    let streetBetAmount = playerData.streetBetAmount + action.amount
+    playerData.streetBetAmount = streetBetAmount
     return action
   }
 
@@ -543,23 +548,146 @@ export default class Game {
     }
     for (let playerId in this._playerDataDic)
     {
-      let amoumt = this._playerDataDic[playerId].streetAmount
-      this._playerDataDic[playerId].streetAmount = 0
-      this._playerDataDic[playerId].amount = this._playerDataDic[playerId].amount + amoumt
+      let amoumt = this._playerDataDic[playerId].streetBetAmount
+      this._playerDataDic[playerId].streetBetAmount = 0
+      this._playerDataDic[playerId].betAmount = this._playerDataDic[playerId].betAmount + amoumt
     }
     this._streeLastPlayerId = ""
     this._streetHighAmount = 0
   }
 
+  /**
+   * 设置玩家手牌排名数据
+   */
+  private setPlayerHandRank ()
+  {
+    let playerCards = this._dealer.getDealtCards()
+    let newPlayerCard = []
+    let newPlayerId = []
+    for (let playerId in this._playerDataDic)
+    {
+      if (this._playerDataDic[playerId].lastActType !== ActionType.FOLD)
+      {
+        newPlayerCard.push(playerCards[playerId])
+        newPlayerId.push(playerId)
+      }
+    }
+    let oddsCalculator = OddsCalculator.calculate(newPlayerCard,this._dealer.getBoardCards())
+
+    for (let i = 0;i < newPlayerCard.length;i++)
+    {
+      let handRank = oddsCalculator.getHandRank(i)
+      this._playerDataDic[newPlayerId[i]].handRank = handRank
+    }
+  }
+
+  /**
+   * 获取玩家排名
+   * @param playerId 玩家Id
+   */
+  private getPlayerRank (playerId: string): number
+  {
+    if (this._playerDataDic[playerId].handRank)
+    {
+      return this._playerDataDic[playerId].handRank.getRank()
+    }
+    return 0
+  }
+
+  /**
+   * 获取列表中排名最高玩家列表
+   * @param players
+   */
+  private getHighRankPlayer (players: any): string[]
+  {
+    let result: string[] = []
+    let sortPondPlayer = _.sortBy(players, [function (o) { return o.rank }])
+    let firstRank = sortPondPlayer[0].rank
+    for (let i = 0;i < sortPondPlayer.length;i++)
+    {
+      if (sortPondPlayer[i].rank === firstRank)
+      {
+        result.push(sortPondPlayer[i].playerId)
+      }
+    }
+    return result
+  }
+
+  /**
+   * 结算所有池子
+   */
+  private calculatorPond ()
+  {
+    let pondBases = []
+    let foldAmount = 0
+    for (let playerId in this._playerDataDic)
+    {
+      if (this._playerDataDic[playerId].lastActType !== ActionType.FOLD)
+      {
+        pondBases.push(this._playerDataDic[playerId].betAmount)
+      } else
+      {
+        foldAmount = foldAmount + this._playerDataDic[playerId].betAmount
+      }
+    }
+    pondBases = _.sortedUniq(pondBases)
+
+    for (let i = 0;i < pondBases.length;i++)
+    {
+      let pondPlayers = []
+      for (let playerId in this._playerDataDic)
+      {
+        if (this._playerDataDic[playerId].betAmount >= pondBases[i])
+        {
+          pondPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId })
+        }
+      }
+
+      let pondAmount = 0
+      if (i === 0) // 底池
+      {
+        pondAmount = pondAmount + foldAmount
+        pondAmount = pondAmount + _.size(pondPlayers) * pondBases[i]
+      }else
+      {
+        let base = pondBases[i] - pondBases[i - 1]
+        pondAmount = pondAmount + _.size(pondPlayers) * base
+      }
+
+      let winners = this.getHighRankPlayer(pondPlayers)
+      for (let i = 0;i < winners.length;i++)
+      {
+        let amount = this._playerDataDic[winners[i]].pondGet + pondAmount / winners.length
+        this._playerDataDic[winners[i]].pondGet = amount
+      }
+    }
+    this.setPlayerFinalMoney()
+  }
+
+  /**
+   * 计算玩家最终金币数
+   */
+  private setPlayerFinalMoney ()
+  {
+    this._playerFinalMoneys = {}
+    for (let playerId in this._playerDataDic)
+    {
+      let player = this._playerDataDic[playerId]
+      player.player.addMoney(player.pondGet)
+      this._playerFinalMoneys[playerId] = player.player.money
+    }
+  }
 }
 
 class PlayerData
 {
   player: Player
   lastActType: ActionType     // 最后一次行动类型
-  index: number          // 在数组_player中的索引
-  streetAmount: number   // 此轮投入
-  amount: number         // 所有投入
+  index: number               // 在数组_player中的索引
+  streetBetAmount: number        // 此轮投入
+  betAmount: number              // 所有投入
+  handRank: HandRank          // 排名
+  pondGet: number             // 从所有奖池获得
 }
 
 class PlayerNotHaveEnoughMoneyError extends Error {}

@@ -1,8 +1,8 @@
 import { IRule } from './Rule'
-import { CardGroup } from './CardGroup'
+import { CardGroup } from './CardGroup';
 import { Card } from '.'
 import { Rank, Suit } from './Card'
-import { random, Dictionary } from 'lodash'
+import { random } from 'lodash'
 
 export default class Dealer {
 
@@ -10,7 +10,7 @@ export default class Dealer {
 
   private allCards: CardGroup
   private boardCards: CardGroup
-  private playerCards: Dictionary <CardGroup>
+  private playerCards: {[playerId: string]: CardGroup}
   private isDealAll = false
 
   /**
