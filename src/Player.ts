@@ -1,7 +1,7 @@
 
 export default class Player {
 
-  get id(): string { return this.id }
+  get id(): string { return this._id }
   get money(): number { return this._money }
   private _id: string
   private _misc: {[key: string]: any}

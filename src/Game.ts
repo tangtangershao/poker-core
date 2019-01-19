@@ -55,6 +55,7 @@ export default class Game {
    * @memberof Game
    */
   getNextPlayer (): Player {
+    this.checkGameStart()
     let nestPlayerId = this.getNestActionPlayerId()
     return this._playerDataDic[nestPlayerId].player
   }
@@ -271,14 +272,14 @@ export default class Game {
         pondGet: 0
       }
     }
+    this._street = Street.PREFLOP
     this.handleSBBB()
 
     this._dealer.shuffle()
     this._dealer.dealAll(playerIds)
     this._gameStatus = gameStatus.START
 
-    this._street = Street.PREFLOP
-    this._streetHighAmount = ActionType.BB
+    this._streetHighAmount = this._stack.bb
     let sbPlayer = this.getNestPlayerData(this._buttonPlayerId)
     let bbPlayer = this.getNestPlayerData(sbPlayer.player.id)
     this._streeLastPlayerId = bbPlayer.player.id
@@ -293,6 +294,7 @@ export default class Game {
    * @memberof Game
    */
   endGame () {
+    this.changeStreet()
     this.setPlayerHandRank()
     this.calculatorPond()
     this._gameStatus = gameStatus.END
@@ -408,7 +410,7 @@ export default class Game {
     let action = new Action()
     action.playerId = playerData.player.id
     action.type = actionType
-    action.street = Street.FLOP
+    action.street = this._street
     action.amount = 0
     if (amount)
     {
@@ -513,6 +515,7 @@ export default class Game {
   private conditionAction (playerId: string,actionType: ActionType)
   {
     let lastAction = this.getLastActionNotFold(true)
+    if (lastAction === null) { return }
     let canActs = this.nestActionCanDo(lastAction.type)
     let haveAct = false
     for (let act of canActs)
@@ -600,17 +603,47 @@ export default class Game {
    */
   private getHighRankPlayer (players: any): string[]
   {
-    let result: string[] = []
-    let sortPondPlayer = _.sortBy(players, [function (o) { return o.rank }])
+    let highers: string[] = []
+    let sortPondPlayer = _.sortBy(players, [function (o: any) { return -o.rank }])
     let firstRank = sortPondPlayer[0].rank
+
     for (let i = 0;i < sortPondPlayer.length;i++)
     {
       if (sortPondPlayer[i].rank === firstRank)
       {
-        result.push(sortPondPlayer[i].playerId)
+        highers.push(sortPondPlayer[i].playerId)
       }
     }
-    return result
+
+    if (highers.length === 1)
+    {
+      return highers
+    }else if (highers.length > 1)
+    {
+      let result = []
+      let first = highers[0]
+      let firstHandRank = this._playerDataDic[highers[0]].handRank
+      for (let i = 1;i < highers.length;i++)
+      {
+        let handRank = this._playerDataDic[highers[i]].handRank
+        if (firstHandRank.compareTo(handRank) === 1)
+        {
+          first = highers[i]
+          firstHandRank = handRank
+        }
+      }
+
+      for (let i = 0;i < highers.length;i++)
+      {
+        let handRank = this._playerDataDic[highers[i]].handRank
+        if (firstHandRank.compareTo(handRank) === 0)
+        {
+          result.push(first)
+        }
+      }
+      return result
+    }
+    return null
   }
 
   /**
@@ -631,13 +664,12 @@ export default class Game {
       }
     }
     pondBases = _.sortedUniq(pondBases)
-
     for (let i = 0;i < pondBases.length;i++)
     {
       let pondPlayers = []
       for (let playerId in this._playerDataDic)
       {
-        if (this._playerDataDic[playerId].betAmount >= pondBases[i])
+        if (this._playerDataDic[playerId].lastActType !== ActionType.FOLD && this._playerDataDic[playerId].betAmount >= pondBases[i])
         {
           pondPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId })
         }
@@ -655,6 +687,7 @@ export default class Game {
       }
 
       let winners = this.getHighRankPlayer(pondPlayers)
+      console.log(" 池子所剩玩家 ",pondPlayers," 池子 获胜者 ",winners)
       for (let i = 0;i < winners.length;i++)
       {
         let amount = this._playerDataDic[winners[i]].pondGet + pondAmount / winners.length
@@ -677,6 +710,27 @@ export default class Game {
       this._playerFinalMoneys[playerId] = player.player.money
     }
   }
+
+  getAllActions (): Action[]
+  {
+    return this._actions
+  }
+
+  getPlayerDataDic (): any
+  {
+    return this._playerDataDic
+  }
+
+  getPlayerMoneys (): any
+  {
+    return this._playerFinalMoneys
+  }
+
+  getBoardCardGroup (): CardGroup
+  {
+    return this._dealer.getBoardCards()
+  }
+
 }
 
 class PlayerData

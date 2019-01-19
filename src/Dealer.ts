@@ -25,8 +25,8 @@ export default class Dealer {
    * will clean the dealt history
    */
   shuffle () {
-    this.boardCards = null
-    this.playerCards = null
+    this.boardCards = new CardGroup()
+    this.playerCards = {}
     this.isDealAll = false
     this.resetCards()
   }
@@ -69,7 +69,7 @@ export default class Dealer {
     let cardCount = 0
     for (let playerId of playerIds)
     {
-      let cardGroup: CardGroup
+      let cardGroup = new CardGroup()
       cardGroup.push(this.allCards[cardCount])
       cardCount += 1
       cardGroup.push(this.allCards[cardCount])
@@ -86,7 +86,7 @@ export default class Dealer {
 
   private resetCards ()
   {
-    this.allCards = null
+    this.allCards = new CardGroup()
     if (this.rule.A6789_STRAIGHT)
     {
       for (let i = 1;i < 5;i++)

@@ -7,15 +7,15 @@ import { CardGroup } from './CardGroup'
 import { IRule } from './Rule'
 
 export class HandRankAlias {
-  public static HIGH_CARD: string = 'HIGH_CARD'
-  public static PAIR: string = 'PAIR'
-  public static TWO_PAIRS: string = 'TWO_PAIRS'
-  public static TRIPS: string = 'TRIPS'
-  public static STRAIGHT: string = 'STRAIGHT'
-  public static FLUSH: string = 'FLUSH'
-  public static FULL_HOUSE: string = 'FULL_HOUSE'
-  public static QUADS: string = 'QUADS'
-  public static STRAIGHT_FLUSH: string = 'STRAIGHT_FLUSH'
+  public static HIGH_CARD: string = 'HIGH_CARD'           // 高牌
+  public static PAIR: string = 'PAIR'                     // 一对儿
+  public static TWO_PAIRS: string = 'TWO_PAIRS'           // 两对儿
+  public static TRIPS: string = 'TRIPS'                   // 三张相同牌
+  public static STRAIGHT: string = 'STRAIGHT'             // 顺子
+  public static FLUSH: string = 'FLUSH'                   // 同花
+  public static FULL_HOUSE: string = 'FULL_HOUSE'         // 葫芦（三张相同牌 + 一对儿）
+  public static QUADS: string = 'QUADS'                   // 四张相同牌
+  public static STRAIGHT_FLUSH: string = 'STRAIGHT_FLUSH' // 同花顺
 }
 
 export class HandRank {
