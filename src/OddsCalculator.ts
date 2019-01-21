@@ -47,7 +47,7 @@ export class HandEquity {
     const tie: number = this.getTiePercentage()
     if (tie > 0) {
       s += ` (Tie: ${tie}%)`
-    }
+    } 
     return s
   }
 }

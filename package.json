@@ -10,7 +10,7 @@
   "scripts": {
     "build": "rm -rf dist/* && rm -rf dts/* && tsc",
     "lint": "tslint --project tsconfig.json -e ./src/bin/*.ts ./src/{,**/}*.ts ./tests/{,**/}*.ts --format verbose --type-check",
-    "test": "cross-env NODE_ENV=test mocha --recursive --timeout 4000 --require ts-node/register --bail test/**/*.ts",
+    "test": "jest",
     "cover": "cross-env NODE_ENV=test nyc --report-dir coverage npm t"
   },
   "repository": {
@@ -38,19 +38,23 @@
     "@types/chai": "^3.4.34",
     "@types/chalk": "^0.4.31",
     "@types/commander": "^2.3.31",
+    "@types/jest": "^23.3.13",
     "@types/lodash": "^4.14.52",
     "@types/mocha": "^2.2.37",
     "@types/node": "^7.0.0",
     "chai": "^3.5.0",
     "coveralls": "^3.0.2",
     "cross-env": "^5.2.0",
+    "jest": "^23.6.0",
+    "jest-extended": "^0.11.0",
     "mocha": "^5.2.0",
     "nyc": "^13.0.1",
+    "ts-jest": "^23.10.5",
     "ts-node": "^7.0.0",
     "tslint": "^4.3.1",
     "tslint-config-standard": "^8.0.1",
     "tslint-microsoft-contrib": "^4.0.0",
-    "typescript": "^2.1.5"
+    "typescript": "^2.9.2"
   },
   "nyc": {
     "include": [

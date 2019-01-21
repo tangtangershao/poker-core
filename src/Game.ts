@@ -711,6 +711,7 @@ export default class Game {
     }
   }
 
+  //* 以下暂存 测试用到
   getAllActions (): Action[]
   {
     return this._actions
@@ -744,11 +745,11 @@ class PlayerData
   pondGet: number             // 从所有奖池获得
 }
 
-class PlayerNotHaveEnoughMoneyError extends Error {}
-class NotPlayerTurnToActionError extends Error {}
-class GameIsStartedError extends Error {}
-class GameIsNotStartError extends Error {}
-class GameIsEndError extends Error {}
-class CanNotActionAtStreetError extends Error {}
-class CanNotFindButtonPlayerError extends Error {}
-class PlayersIsNotEnoughForGameError extends Error {}
+export class PlayerNotHaveEnoughMoneyError extends Error {}
+export class NotPlayerTurnToActionError extends Error {}
+export class GameIsStartedError extends Error {}
+export class GameIsNotStartError extends Error {}
+export class GameIsEndError extends Error {}
+export class CanNotActionAtStreetError extends Error {}
+export class CanNotFindButtonPlayerError extends Error {}
+export class PlayersIsNotEnoughForGameError extends Error {}

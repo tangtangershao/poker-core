@@ -7,7 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const _ = require("lodash");
 const Card_1 = require("./Card");
 const CardGroup_1 = require("./CardGroup");
-const Game_1 = require("./Game");
+const Rule_1 = require("./Rule");
 const HandRank_1 = require("./HandRank");
 class HandEquity {
     constructor() {
@@ -79,10 +79,10 @@ class OddsCalculator {
         iterations = iterations || 0;
         let game;
         if (gameVariant === 'short') {
-            game = new Game_1.ShortDeckGame();
+            game = new Rule_1.ShortDeckRule();
         }
         else {
-            game = new Game_1.FullDeckGame();
+            game = new Rule_1.FullDeckRule();
         }
         let handranks = [];
         // Find out which cards are left in the deck
