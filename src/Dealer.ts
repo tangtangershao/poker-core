@@ -33,8 +33,13 @@ export default class Dealer {
 
   /**
    * get all five board cards
+   * @throws NotBeenDealtError
    */
   getBoardCards (): CardGroup {
+    if (!this.isDealAll)
+    {
+      throw new NotBeenDealtError()
+    }
     return this.boardCards
   }
 

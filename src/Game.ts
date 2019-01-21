@@ -5,7 +5,7 @@ import { IRule } from './Rule'
 import { CardGroup, HandRank } from '.'
 import { Dictionary } from 'lodash'
 import  * as _ from 'lodash'
-import { OddsCalculator } from './OddsCalculator';
+import { OddsCalculator } from './OddsCalculator'
 
 enum gameStatus {
   NOTSTART,
@@ -37,6 +37,7 @@ export default class Game {
    * @throws PlayersIsNotEnoughForGameError
    */
   constructor (rule: IRule,players: Player[],stack: Stack,buttonPlayerId: string) {
+
     this._dealer = new Dealer(rule)
     this._rule = rule
     this._players = players
@@ -53,6 +54,8 @@ export default class Game {
    *
    * @returns {Player}
    * @memberof Game
+   * @throws GameIsNotStartError
+   * @throws GameIsEndError
    */
   getNextPlayer (): Player {
     this.checkGameStart()
@@ -112,7 +115,7 @@ export default class Game {
       let action = this.recordAction(playerId,ActionType.RAISE,amount)
       player.player.deductMoney(amount)
       this._streetHighAmount = amount
-      this._streeLastPlayerId = this.getLastActionNotFold(true).playerId
+      this._streeLastPlayerId = this.getLastActionNotFold(false).playerId
       return action
     }else
     {
@@ -221,7 +224,7 @@ export default class Game {
     if (amount > this._streetHighAmount)
     {
       this._streetHighAmount = amount
-      this._streeLastPlayerId = this.getLastActionNotFold(true).playerId
+      this._streeLastPlayerId = this.getLastActionNotFold(false).playerId
     }
     return action
   }
@@ -233,6 +236,10 @@ export default class Game {
    * @memberof Game
    */
   getHoleCards (): {[playerId: string]: CardGroup;} {
+    if (this._gameStatus === gameStatus.START)
+    {
+      throw new GameIsStartedError()
+    }
     return this._dealer.getDealtCards()
   }
 
@@ -294,10 +301,58 @@ export default class Game {
    * @memberof Game
    */
   endGame () {
+    if (this._gameStatus === gameStatus.NOTSTART)
+    {
+      throw new GameIsNotStartError()
+    }else if (this._gameStatus === gameStatus.END)
+    {
+      throw new GameIsEndError()
+    }
     this.changeStreet()
     this.setPlayerHandRank()
     this.calculatorPond()
     this._gameStatus = gameStatus.END
+  }
+
+  /**
+   * get the amount of every pod ,this first is pot ,the others are side_pod
+   * @throws GameIsNotStartError
+   */
+  getPodsAmount (): number[]
+  {
+    if (this._gameStatus === gameStatus.NOTSTART)
+    {
+      throw new GameIsNotStartError()
+    }
+    let podsAmount = []
+    let pondBases = []
+    for (let playerId in this._playerDataDic)
+    {
+      if (this._playerDataDic[playerId].betAmount !== 0) {
+        pondBases.push(this._playerDataDic[playerId].betAmount) }
+    }
+    pondBases = _.sortedUniq(pondBases)
+    pondBases = _.sortBy(pondBases)
+    for (let i = 0;i < pondBases.length;i++)
+    {
+      let pondPlayerCount = 0
+      for (let playerId in this._playerDataDic)
+      {
+        if (this._playerDataDic[playerId].betAmount >= pondBases[i]) {
+          pondPlayerCount = pondPlayerCount + 1 }
+      }
+      let pondAmount = 0
+      if (i === 0) // 底池
+      {
+        pondAmount = pondPlayerCount * pondBases[i]
+      }else
+      {
+        let base = pondBases[i] - pondBases[i - 1]
+        pondAmount = pondPlayerCount * base
+      }
+      podsAmount.push(pondAmount)
+    }
+    return podsAmount
   }
 
   /**
@@ -387,9 +442,11 @@ export default class Game {
     if (nestPlayerId === this._actions[this._actions.length - 1].playerId)
     {
       //游戏结束？？？？？？？？？？？？？？？？
+      // this.endGame()
+      console.log(" 游戏结束")
     }
 
-    if (nestPlayer.lastActType === ActionType.FOLD)
+    if (nestPlayer.lastActType === ActionType.FOLD || nestPlayer.lastActType === ActionType.ALLIN)
     {
       return this.getNestActionPlayerId(nestPlayerId)
     }else
@@ -514,9 +571,23 @@ export default class Game {
    */
   private conditionAction (playerId: string,actionType: ActionType)
   {
+    // 大小盲proflop这一轮特殊处理
+    if (this._playerDataDic[playerId].lastActType === ActionType.BB && this._playerDataDic[playerId].streetBetAmount === this._streetHighAmount )
+    {
+      if (actionType === ActionType.CALL){
+        throw new CanNotActionAtStreetError(`nest action  not allowd player ${playerId} action -${actionType}`)
+      }else if (actionType === ActionType.CHECK){
+        return
+      }
+    }
+
     let lastAction = this.getLastActionNotFold(true)
-    if (lastAction === null) { return }
-    let canActs = this.nestActionCanDo(lastAction.type)
+    let lastActionType = 0
+    if (lastAction )
+    {
+      lastActionType = lastAction.type
+    }
+    let canActs = this.nestActionCanDo(lastActionType)
     let haveAct = false
     for (let act of canActs)
     {
@@ -569,11 +640,8 @@ export default class Game {
     let newPlayerId = []
     for (let playerId in this._playerDataDic)
     {
-      if (this._playerDataDic[playerId].lastActType !== ActionType.FOLD)
-      {
-        newPlayerCard.push(playerCards[playerId])
-        newPlayerId.push(playerId)
-      }
+      newPlayerCard.push(playerCards[playerId])
+      newPlayerId.push(playerId)
     }
     let oddsCalculator = OddsCalculator.calculate(newPlayerCard,this._dealer.getBoardCards())
 
@@ -652,42 +720,34 @@ export default class Game {
   private calculatorPond ()
   {
     let pondBases = []
-    let foldAmount = 0
     for (let playerId in this._playerDataDic)
     {
-      if (this._playerDataDic[playerId].lastActType !== ActionType.FOLD)
-      {
-        pondBases.push(this._playerDataDic[playerId].betAmount)
-      } else
-      {
-        foldAmount = foldAmount + this._playerDataDic[playerId].betAmount
-      }
+      if (this._playerDataDic[playerId].betAmount !== 0) {
+        pondBases.push(this._playerDataDic[playerId].betAmount) }
     }
     pondBases = _.sortedUniq(pondBases)
+    pondBases = _.sortBy(pondBases)
     for (let i = 0;i < pondBases.length;i++)
     {
       let pondPlayers = []
       for (let playerId in this._playerDataDic)
       {
-        if (this._playerDataDic[playerId].lastActType !== ActionType.FOLD && this._playerDataDic[playerId].betAmount >= pondBases[i])
-        {
-          pondPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId })
-        }
+        if (this._playerDataDic[playerId].betAmount >= pondBases[i]) {
+          pondPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId }) }
       }
 
       let pondAmount = 0
       if (i === 0) // 底池
       {
-        pondAmount = pondAmount + foldAmount
-        pondAmount = pondAmount + _.size(pondPlayers) * pondBases[i]
+        pondAmount = _.size(pondPlayers) * pondBases[i]
       }else
       {
         let base = pondBases[i] - pondBases[i - 1]
-        pondAmount = pondAmount + _.size(pondPlayers) * base
+        pondAmount = _.size(pondPlayers) * base
       }
 
       let winners = this.getHighRankPlayer(pondPlayers)
-      console.log(" 池子所剩玩家 ",pondPlayers," 池子 获胜者 ",winners)
+      //console.log(" 池子所有玩家 ",pondPlayers," 池子 获胜者 ",winners)
       for (let i = 0;i < winners.length;i++)
       {
         let amount = this._playerDataDic[winners[i]].pondGet + pondAmount / winners.length
@@ -711,7 +771,7 @@ export default class Game {
     }
   }
 
-  //* 以下暂存 测试用到
+  //* 暂存 测试用到
   getAllActions (): Action[]
   {
     return this._actions
@@ -739,8 +799,8 @@ class PlayerData
   player: Player
   lastActType: ActionType     // 最后一次行动类型
   index: number               // 在数组_player中的索引
-  streetBetAmount: number        // 此轮投入
-  betAmount: number              // 所有投入
+  streetBetAmount: number     // 此轮投入
+  betAmount: number           // 所有投入
   handRank: HandRank          // 排名
   pondGet: number             // 从所有奖池获得
 }
