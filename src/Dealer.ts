@@ -141,6 +141,6 @@ export default class Dealer {
   }
 }
 
-class NotBeenDealtError extends Error {}
+export class NotBeenDealtError extends Error {}
 
-class HadBeenDealtError extends Error {}
+export class HadBeenDealtError extends Error {}
