@@ -7,7 +7,7 @@ import Game, { CanNotActionAtStreetError, NotPlayerTurnToActionError,
 import { IRule, FullDeckRule } from '../src/Rule'
 import { Stack } from '../src/Define'
 import Player from '../src/Player'
-import { GameIsEndError, GameIsStartedError } from '../src/Game';
+import { GameIsEndError, GameIsStartedError } from '../src/Game'
 
 //#region getNestPlayer()
 
@@ -86,7 +86,7 @@ test('bet() GameIsNotStartError', () => {
   strack.sb = 25
   strack.currency = "RMB"
   const game = new Game(rule,players,strack,"4")
-  expect(() => {game.Bet("2",100)}).toThrow(GameIsNotStartError)
+  expect(() => { game.Bet("2",100) }).toThrow(GameIsNotStartError)
 })
 
 test('bet() NotPlayerTurnToActionError', () => {
@@ -103,7 +103,7 @@ test('bet() NotPlayerTurnToActionError', () => {
   strack.currency = "RMB"
   const game = new Game(rule,players,strack,"4")
   game.startGame()
-  expect(() => {game.Bet("3",100)}).toThrow(NotPlayerTurnToActionError)
+  expect(() => { game.Bet("3",100) }).toThrow(NotPlayerTurnToActionError)
 })
 
 test('bet() CanNotActionAtStreetError', () => {
@@ -121,7 +121,7 @@ test('bet() CanNotActionAtStreetError', () => {
   const game = new Game(rule,players,strack,"4")
   game.startGame()
   game.Fold("2")
-  expect(() => {game.Bet("3",100)}).toThrow(CanNotActionAtStreetError)
+  expect(() => { game.Bet("3",100) }).toThrow(CanNotActionAtStreetError)
 })
 
 test('bet() PlayerNotHaveEnoughMoneyError', () => {
@@ -143,7 +143,7 @@ test('bet() PlayerNotHaveEnoughMoneyError', () => {
   game.Fold("4")
   game.Fold("5")
   game.Check("1")
-  expect(() => {game.Bet("3",700)}).toThrow(PlayerNotHaveEnoughMoneyError)
+  expect(() => { game.Bet("3",700) }).toThrow(PlayerNotHaveEnoughMoneyError)
 })
 
 test('bet() GameIsEndError', () => {
@@ -168,7 +168,7 @@ test('bet() GameIsEndError', () => {
   game.AllIn("3")
   game.AllIn("1")
   game.endGame()
-  expect(() => {game.Bet("2",100)}).toThrow(GameIsEndError)
+  expect(() => { game.Bet("2",100) }).toThrow(GameIsEndError)
 })
 
 //#endregion
@@ -188,7 +188,7 @@ test('Raise()  GameIsNotStartError', () => {
   strack.sb = 25
   strack.currency = "RMB"
   const game = new Game(rule,players,strack,"4")
-  expect(() => {game.Raise("2",100)}).toThrow(GameIsNotStartError)
+  expect(() => { game.Raise("2",100) }).toThrow(GameIsNotStartError)
   game.startGame()
 })
 
@@ -206,7 +206,7 @@ test('Raise()  NotPlayerTurnToActionError', () => {
   strack.currency = "RMB"
   const game = new Game(rule,players,strack,"4")
   game.startGame()
-  expect(() => {game.Raise("3",300)}).toThrow(NotPlayerTurnToActionError)
+  expect(() => { game.Raise("3",300) }).toThrow(NotPlayerTurnToActionError)
 })
 
 test('Raise()  CanNotActionAtStreetError', () => {
@@ -229,10 +229,10 @@ test('Raise()  CanNotActionAtStreetError', () => {
   game.Fold("5")
   game.Check("1")
   game.Check("2")
-  expect(() => {game.Raise("3",50)}).toThrow(CanNotActionAtStreetError)
+  expect(() => { game.Raise("3",50) }).toThrow(CanNotActionAtStreetError)
 })
 
-test('Raise()  PlayerNotHaveEnoughMoneyError', ()  =>  {
+test('Raise()  PlayerNotHaveEnoughMoneyError', () => {
   const rule = new FullDeckRule()
   const players = []
   for ( let i = 1;i < 6;i++)
@@ -246,7 +246,7 @@ test('Raise()  PlayerNotHaveEnoughMoneyError', ()  =>  {
   strack.currency = "RMB"
   const game = new Game(rule,players,strack,"4")
   game.startGame()
-  expect(() => {game.Raise("2",300)}).toThrow(PlayerNotHaveEnoughMoneyError)
+  expect(() => { game.Raise("2",300) }).toThrow(PlayerNotHaveEnoughMoneyError)
 })
 
 test('Raise()  GameIsEndError', () => {
@@ -271,7 +271,7 @@ test('Raise()  GameIsEndError', () => {
   game.AllIn("3")
   game.AllIn("1")
   game.endGame()
-  expect(() => {game.Raise("2",300)}).toThrow(GameIsEndError)
+  expect(() => { game.Raise("2",300) }).toThrow(GameIsEndError)
 })
 
 //#endregion
@@ -291,7 +291,7 @@ test('Check()  GameIsNotStartError', () => {
   strack.sb = 25
   strack.currency = "RMB"
   const game = new Game(rule,players,strack,"4")
-  expect(() => {game.Check("2")}).toThrow(GameIsNotStartError)
+  expect(() => { game.Check("2") }).toThrow(GameIsNotStartError)
   game.startGame()
 })
 
@@ -313,7 +313,7 @@ test('Check()  NotPlayerTurnToActionError', () => {
   game.Call("3")
   game.Fold("4")
   game.Fold("5")
-  expect(() => { game.Check("3")}).toThrow(NotPlayerTurnToActionError)
+  expect(() => { game.Check("3") }).toThrow(NotPlayerTurnToActionError)
 })
 
 test('Check()  CanNotActionAtStreetError', () => {
@@ -336,7 +336,7 @@ test('Check()  CanNotActionAtStreetError', () => {
   game.Fold("5")
   game.Check("1")
   game.Bet("2",100)
-  expect(() => {game.Check("3")}).toThrow(CanNotActionAtStreetError)
+  expect(() => { game.Check("3") }).toThrow(CanNotActionAtStreetError)
 })
 
 test('Check()  GameIsEndError', () => {
@@ -361,7 +361,7 @@ test('Check()  GameIsEndError', () => {
   game.AllIn("3")
   game.AllIn("1")
   game.endGame()
-  expect(() => {game.Check("3")}).toThrow(GameIsEndError)
+  expect(() => { game.Check("3") }).toThrow(GameIsEndError)
 })
 
 //#endregion
@@ -381,7 +381,7 @@ test('Fold()  GameIsNotStartError', () => {
   strack.sb = 25
   strack.currency = "RMB"
   const game = new Game(rule,players,strack,"4")
-  expect(() => {game.Fold("2")}).toThrow(GameIsNotStartError)
+  expect(() => { game.Fold("2") }).toThrow(GameIsNotStartError)
   game.startGame()
 })
 
@@ -401,7 +401,7 @@ test('Fold()  NotPlayerTurnToActionError', () => {
   game.startGame()
   game.Fold("2")
   game.Call("3")
-  expect(() => { game.Fold("5")}).toThrow(NotPlayerTurnToActionError)
+  expect(() => { game.Fold("5") }).toThrow(NotPlayerTurnToActionError)
 })
 
 test('Fold()  GameIsEndError', () => {
@@ -426,7 +426,7 @@ test('Fold()  GameIsEndError', () => {
   game.AllIn("3")
   game.AllIn("1")
   game.endGame()
-  expect(() => {game.Fold("3")}).toThrow(GameIsEndError)
+  expect(() => { game.Fold("3") }).toThrow(GameIsEndError)
 })
 
 //#endregion
@@ -446,7 +446,7 @@ test('Call()  GameIsNotStartError', () => {
   strack.sb = 25
   strack.currency = "RMB"
   const game = new Game(rule,players,strack,"4")
-  expect(() => {game.Call("2")}).toThrow(GameIsNotStartError)
+  expect(() => { game.Call("2") }).toThrow(GameIsNotStartError)
   game.startGame()
 })
 
@@ -466,7 +466,7 @@ test('Call()  NotPlayerTurnToActionError', () => {
   game.startGame()
   game.Fold("2")
   game.Call("3")
-  expect(() => { game.Call("5")}).toThrow(NotPlayerTurnToActionError)
+  expect(() => { game.Call("5") }).toThrow(NotPlayerTurnToActionError)
 })
 
 test('Call()  CanNotActionAtStreetError', () => {
@@ -488,7 +488,7 @@ test('Call()  CanNotActionAtStreetError', () => {
   game.Fold("4")
   game.Fold("5")
   game.Check("1")
-  expect(() => {game.Call("2")}).toThrow(CanNotActionAtStreetError)
+  expect(() => { game.Call("2") }).toThrow(CanNotActionAtStreetError)
 })
 
 test('Call()  PlayerNotHaveEnoughMoneyError', () => {
@@ -506,7 +506,7 @@ test('Call()  PlayerNotHaveEnoughMoneyError', () => {
   const game = new Game(rule,players,strack,"4")
   game.startGame()
   game.Raise("2",350)
-  expect(() => {game.Call("3")}).toThrow(PlayerNotHaveEnoughMoneyError)
+  expect(() => { game.Call("3") }).toThrow(PlayerNotHaveEnoughMoneyError)
 })
 
 test('Call()  GameIsEndError', () => {
@@ -531,7 +531,7 @@ test('Call()  GameIsEndError', () => {
   game.AllIn("3")
   game.AllIn("1")
   game.endGame()
-  expect(() => {game.Call("3")}).toThrow(GameIsEndError)
+  expect(() => { game.Call("3") }).toThrow(GameIsEndError)
 })
 
 //#endregion
@@ -551,7 +551,7 @@ test('AllIn()  GameIsNotStartError', () => {
   strack.sb = 25
   strack.currency = "RMB"
   const game = new Game(rule,players,strack,"4")
-  expect(() => {game.AllIn("2")}).toThrow(GameIsNotStartError)
+  expect(() => { game.AllIn("2") }).toThrow(GameIsNotStartError)
   game.startGame()
 })
 
@@ -571,7 +571,7 @@ test('AllIn()  NotPlayerTurnToActionError', () => {
   game.startGame()
   game.Fold("2")
   game.Call("3")
-  expect(() => { game.AllIn("5")}).toThrow(NotPlayerTurnToActionError)
+  expect(() => { game.AllIn("5") }).toThrow(NotPlayerTurnToActionError)
 })
 
 test('AllIn()  GameIsEndError', () => {
@@ -596,7 +596,7 @@ test('AllIn()  GameIsEndError', () => {
   game.AllIn("3")
   game.AllIn("1")
   game.endGame()
-  expect(() => {game.Call("3")}).toThrow(GameIsEndError)
+  expect(() => { game.Call("3") }).toThrow(GameIsEndError)
 })
 
 //#endregion
@@ -637,7 +637,7 @@ test('startGame()  GameIsStartedError', () => {
   strack.currency = "RMB"
   const game = new Game(rule,players,strack,"4")
   game.startGame()
-  expect(() => {game.startGame()}).toThrow(GameIsStartedError)
+  expect(() => { game.startGame() }).toThrow(GameIsStartedError)
 })
 
 test('startGame()  GameIsEndError', () => {
@@ -662,7 +662,7 @@ test('startGame()  GameIsEndError', () => {
   game.AllIn("3")
   game.AllIn("1")
   game.endGame()
-  expect(() => {game.startGame()}).toThrow(GameIsEndError)
+  expect(() => { game.startGame() }).toThrow(GameIsEndError)
 })
 
 //#endregion
@@ -682,7 +682,7 @@ test('endGame()  GameIsNotStartError', () => {
   strack.sb = 25
   strack.currency = "RMB"
   const game = new Game(rule,players,strack,"4")
-  expect(() => {game.endGame()}).toThrow(GameIsNotStartError)
+  expect(() => { game.endGame() }).toThrow(GameIsNotStartError)
 })
 
 test('endGame()  GameIsEndError', () => {
@@ -707,7 +707,7 @@ test('endGame()  GameIsEndError', () => {
   game.AllIn("3")
   game.AllIn("1")
   game.endGame()
-  expect(() => {game.endGame()}).toThrow(GameIsEndError)
+  expect(() => { game.endGame() }).toThrow(GameIsEndError)
 })
 
 //#endregion
@@ -727,7 +727,7 @@ test('getPodsAmount()  GameIsNotStartError ', () => {
   strack.sb = 25
   strack.currency = "RMB"
   const game = new Game(rule,players,strack,"4")
-  expect(() => {game.getPodsAmount()}).toThrow(GameIsNotStartError)
+  expect(() => { game.getPodsAmount() }).toThrow(GameIsNotStartError)
 })
 
 test('getPodsAmount()  ', () => {
@@ -753,6 +753,47 @@ test('getPodsAmount()  ', () => {
   game.AllIn("1")
   game.endGame()
   expect(game.getPodsAmount()).toEqual([75,150,200])
+})
+
+test('isGameEnd()  ', () => {
+  const rule = new FullDeckRule()
+  const players = []
+  for ( let i = 1;i < 6;i++)
+  {
+    let player = new Player(i.toString(),100 * i)
+    players.push(player)
+  }
+  const strack = new Stack()
+  strack.bb = 50
+  strack.sb = 25
+  strack.currency = "RMB"
+  const game = new Game(rule,players,strack,"4")
+  game.startGame()
+  game.Fold("2")
+  game.Fold("3")
+  game.Call("4")
+  game.Fold("5")
+  game.Fold("1")
+})
+
+test('isGameEnd()   ', () => {
+  const rule = new FullDeckRule()
+  const players = []
+  for ( let i = 1;i < 6;i++)
+  {
+    let player = new Player(i.toString(),100 * i)
+    players.push(player)
+  }
+  const strack = new Stack()
+  strack.bb = 50
+  strack.sb = 25
+  strack.currency = "RMB"
+  const game = new Game(rule,players,strack,"4")
+  game.startGame()
+  game.Fold("2")
+  game.Fold("3")
+  game.Fold('4')
+  game.Fold('5')
 })
 
 //#endregion

@@ -86,6 +86,7 @@ export default class Game {
       player.player.deductMoney(amount)
       this._streetHighAmount = amount
       this._streeLastPlayerId = this.getLastActionNotFold(false).playerId
+      this.isGameEnd()
       return action
     }else
     {
@@ -116,6 +117,7 @@ export default class Game {
       player.player.deductMoney(amount)
       this._streetHighAmount = amount
       this._streeLastPlayerId = this.getLastActionNotFold(false).playerId
+      this.isGameEnd()
       return action
     }else
     {
@@ -143,6 +145,7 @@ export default class Game {
     {
       this.changeStreet()
     }
+    this.isGameEnd()
     return action
   }
 
@@ -167,6 +170,7 @@ export default class Game {
     {
       this.changeStreet()
     }
+    this.isGameEnd()
     return action
   }
 
@@ -195,6 +199,7 @@ export default class Game {
       {
         this.changeStreet()
       }
+      this.isGameEnd()
       return action
     }else
     {
@@ -226,6 +231,7 @@ export default class Game {
       this._streetHighAmount = amount
       this._streeLastPlayerId = this.getLastActionNotFold(false).playerId
     }
+    this.isGameEnd()
     return action
   }
 
@@ -236,9 +242,9 @@ export default class Game {
    * @memberof Game
    */
   getHoleCards (): {[playerId: string]: CardGroup;} {
-    if (this._gameStatus === gameStatus.START)
+    if (this._gameStatus === gameStatus.NOTSTART)
     {
-      throw new GameIsStartedError()
+      throw new GameIsNotStartError()
     }
     return this._dealer.getDealtCards()
   }
@@ -301,6 +307,7 @@ export default class Game {
    * @memberof Game
    */
   endGame () {
+    console.log( " beidong  ",this._gameStatus)
     if (this._gameStatus === gameStatus.NOTSTART)
     {
       throw new GameIsNotStartError()
@@ -441,9 +448,9 @@ export default class Game {
 
     if (nestPlayerId === this._actions[this._actions.length - 1].playerId)
     {
-      //游戏结束？？？？？？？？？？？？？？？？
-      // this.endGame()
-      console.log(" 游戏结束")
+      console.log(" getNestActionPlayerId 游戏结束")
+      this.endGame()
+     
     }
 
     if (nestPlayer.lastActType === ActionType.FOLD || nestPlayer.lastActType === ActionType.ALLIN)
@@ -452,6 +459,46 @@ export default class Game {
     }else
     {
       return nestPlayerId
+    }
+  }
+
+  /**
+   * 检查一轮结束是否只剩一个可行动者
+   */
+  private isGameEnd ()
+  {
+    let lastAction = this.getLastActionNotFold(true)
+    if (lastAction )
+    {
+      let foldCount = 0
+      for (let playerId in this._playerDataDic)
+      {
+        if (this._playerDataDic[playerId].lastActType === ActionType.FOLD )
+        {
+          foldCount = foldCount + 1
+        }
+      }
+      if(foldCount === _.size(this._playerDataDic) - 1)
+      {
+        this.endGame()
+      }
+      return
+    } else
+    {
+      console.log("22")
+      let canActionCount = 0
+      for (let playerId in this._playerDataDic)
+      {
+        if (this._playerDataDic[playerId].lastActType !== ActionType.FOLD &&
+          this._playerDataDic[playerId].lastActType !== ActionType.ALLIN )
+        {
+          canActionCount = canActionCount + 1
+        }
+      }
+      if(canActionCount === 1)
+      {
+        this.endGame()
+      }
     }
   }
 
