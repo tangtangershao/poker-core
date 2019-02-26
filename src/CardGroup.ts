@@ -5,7 +5,7 @@
  * (typically either a player's hand, or the shared board)
  */
 import * as _ from 'lodash'
-import { Card } from './Card'
+import { Card, Suit } from './Card'
 
 export class CardGroup extends Array {
   public constructor () {
@@ -67,5 +67,38 @@ export class CardGroup extends Array {
 
   public countBy (cardType: string): {[x: string]: number} {
     return _.countBy(this, cardType)
+  }
+
+  //仅限模拟服务器使用
+  public toNumArray():number[]
+  {
+    const result = []
+    
+    for (const card of this) {
+
+      let cardId = 0
+      let num = card.getRank() - 2 
+      if(num === 0)  num= 13
+      let type = 0
+      switch(card.getSuit ())
+      {
+        case Suit.CLUB :// 4,//方块
+        type = 4
+        break 
+        case Suit.DIAMOND ://= 3, //菱形
+        type = 3
+        break 
+        case Suit.HEART :// 2, //红心
+        type = 2
+        break 
+        case Suit.SPADE ://1, //黑桃
+        type = 1
+        break 
+      }
+      cardId = num + (type-1)*13
+      result.push(cardId)
+    }
+    return result
+   
   }
 }

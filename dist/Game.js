@@ -30,13 +30,15 @@ class Game {
     /**
      * get next player that need to action
      *
-     * @returns {Player}
+     * @returns {PlayerData}
      * @memberof Game
+     * @throws GameIsNotStartError
+     * @throws GameIsEndError
      */
     getNextPlayer() {
         this.checkGameStart();
         let nestPlayerId = this.getNestActionPlayerId();
-        return this._playerDataDic[nestPlayerId].player;
+        return this._playerDataDic[nestPlayerId];
     }
     /**
      * Player bet
@@ -60,6 +62,7 @@ class Game {
             player.player.deductMoney(amount);
             this._streetHighAmount = amount;
             this._streeLastPlayerId = this.getLastActionNotFold(false).playerId;
+            this.isGameEnd();
             return action;
         }
         else {
@@ -87,7 +90,8 @@ class Game {
             let action = this.recordAction(playerId, Define_1.ActionType.RAISE, amount);
             player.player.deductMoney(amount);
             this._streetHighAmount = amount;
-            this._streeLastPlayerId = this.getLastActionNotFold(true).playerId;
+            this._streeLastPlayerId = this.getLastActionNotFold(false).playerId;
+            this.isGameEnd();
             return action;
         }
         else {
@@ -113,6 +117,7 @@ class Game {
         if (playerId === this._streeLastPlayerId) {
             this.changeStreet();
         }
+        this.isGameEnd();
         return action;
     }
     /**
@@ -135,6 +140,7 @@ class Game {
         if (playerId === this._streeLastPlayerId) {
             this.changeStreet();
         }
+        this.isGameEnd();
         return action;
     }
     /**
@@ -160,6 +166,7 @@ class Game {
             if (playerId === this._streeLastPlayerId) {
                 this.changeStreet();
             }
+            this.isGameEnd();
             return action;
         }
         else {
@@ -187,8 +194,9 @@ class Game {
         player.player.deductMoney(amount);
         if (amount > this._streetHighAmount) {
             this._streetHighAmount = amount;
-            this._streeLastPlayerId = this.getLastActionNotFold(true).playerId;
+            this._streeLastPlayerId = this.getLastActionNotFold(false).playerId;
         }
+        this.isGameEnd();
         return action;
     }
     /**
@@ -198,6 +206,9 @@ class Game {
      * @memberof Game
      */
     getHoleCards() {
+        if (this._gameStatus === gameStatus.NOTSTART) {
+            throw new GameIsNotStartError();
+        }
         return this._dealer.getDealtCards();
     }
     /**
@@ -224,6 +235,7 @@ class Game {
             playerIds.push(this._players[i].id);
             this._playerDataDic[this._players[i].id] = {
                 player: this._players[i],
+                cards: null,
                 lastActType: 0,
                 index: i,
                 streetBetAmount: 0,
@@ -232,12 +244,15 @@ class Game {
                 pondGet: 0
             };
         }
+        this._street = Define_1.Street.PREFLOP;
         this.handleSBBB();
         this._dealer.shuffle();
         this._dealer.dealAll(playerIds);
         this._gameStatus = gameStatus.START;
-        this._street = Define_1.Street.PREFLOP;
-        this._streetHighAmount = Define_1.ActionType.BB;
+        for (let playerId in this._dealer.getDealtCards()) {
+            this._playerDataDic[playerId].cards = this._dealer.getDealtCards()[playerId];
+        }
+        this._streetHighAmount = this._stack.bb;
         let sbPlayer = this.getNestPlayerData(this._buttonPlayerId);
         let bbPlayer = this.getNestPlayerData(sbPlayer.player.id);
         this._streeLastPlayerId = bbPlayer.player.id;
@@ -251,9 +266,53 @@ class Game {
      * @memberof Game
      */
     endGame() {
+        if (this._gameStatus === gameStatus.NOTSTART) {
+            throw new GameIsNotStartError();
+        }
+        else if (this._gameStatus === gameStatus.END) {
+            throw new GameIsEndError();
+        }
+        this.changeStreet();
         this.setPlayerHandRank();
         this.calculatorPond();
         this._gameStatus = gameStatus.END;
+    }
+    /**
+     * get the amount of every pod ,this first is pot ,the others are side_pod
+     * @throws GameIsNotStartError
+     */
+    getPodsAmount() {
+        if (this._gameStatus === gameStatus.NOTSTART) {
+            throw new GameIsNotStartError();
+        }
+        let podsAmount = [];
+        let pondBases = [];
+        for (let playerId in this._playerDataDic) {
+            if (this._playerDataDic[playerId].betAmount !== 0) {
+                pondBases.push(this._playerDataDic[playerId].betAmount);
+            }
+        }
+        pondBases = _.sortedUniq(pondBases);
+        pondBases = _.sortBy(pondBases);
+        for (let i = 0; i < pondBases.length; i++) {
+            let pondPlayerCount = 0;
+            for (let playerId in this._playerDataDic) {
+                if (this._playerDataDic[playerId].betAmount >= pondBases[i]) {
+                    pondPlayerCount = pondPlayerCount + 1;
+                }
+            }
+            let pondAmount = 0;
+            if (i === 0) // 底池
+             {
+                pondAmount = pondPlayerCount * pondBases[i];
+            }
+            else {
+                let base = pondBases[i] - pondBases[i - 1];
+                pondAmount = pondPlayerCount * base;
+            }
+            podsAmount.push(pondAmount);
+        }
+        return podsAmount;
     }
     /**
      * 检查是否在游戏中
@@ -331,13 +390,44 @@ class Game {
         let nestPlayer = this.getNestPlayerData(playerId);
         let nestPlayerId = nestPlayer.player.id;
         if (nestPlayerId === this._actions[this._actions.length - 1].playerId) {
-            //游戏结束？？？？？？？？？？？？？？？？
+            console.log(" getNestActionPlayerId 游戏结束");
+            this.endGame();
         }
-        if (nestPlayer.lastActType === Define_1.ActionType.FOLD) {
+        if (nestPlayer.lastActType === Define_1.ActionType.FOLD || nestPlayer.lastActType === Define_1.ActionType.ALLIN) {
             return this.getNestActionPlayerId(nestPlayerId);
         }
         else {
             return nestPlayerId;
+        }
+    }
+    /**
+     * 检查一轮结束是否只剩一个可行动者
+     */
+    isGameEnd() {
+        let lastAction = this.getLastActionNotFold(true);
+        if (lastAction) {
+            let foldCount = 0;
+            for (let playerId in this._playerDataDic) {
+                if (this._playerDataDic[playerId].lastActType === Define_1.ActionType.FOLD) {
+                    foldCount = foldCount + 1;
+                }
+            }
+            if (foldCount === _.size(this._playerDataDic) - 1) {
+                this.endGame();
+            }
+            return;
+        }
+        else {
+            let canActionCount = 0;
+            for (let playerId in this._playerDataDic) {
+                if (this._playerDataDic[playerId].lastActType !== Define_1.ActionType.FOLD &&
+                    this._playerDataDic[playerId].lastActType !== Define_1.ActionType.ALLIN) {
+                    canActionCount = canActionCount + 1;
+                }
+            }
+            if (canActionCount === 1) {
+                this.endGame();
+            }
         }
     }
     /**
@@ -351,7 +441,7 @@ class Game {
         let action = new Define_1.Action();
         action.playerId = playerData.player.id;
         action.type = actionType;
-        action.street = Define_1.Street.FLOP;
+        action.street = this._street;
         action.amount = 0;
         if (amount) {
             action.amount = amount;
@@ -445,8 +535,21 @@ class Game {
      * @param actionType 行动类型
      */
     conditionAction(playerId, actionType) {
+        // 大小盲proflop这一轮特殊处理
+        if (this._playerDataDic[playerId].lastActType === Define_1.ActionType.BB && this._playerDataDic[playerId].streetBetAmount === this._streetHighAmount) {
+            if (actionType === Define_1.ActionType.CALL) {
+                throw new CanNotActionAtStreetError(`nest action  not allowd player ${playerId} action -${actionType}`);
+            }
+            else if (actionType === Define_1.ActionType.CHECK) {
+                return;
+            }
+        }
         let lastAction = this.getLastActionNotFold(true);
-        let canActs = this.nestActionCanDo(lastAction.type);
+        let lastActionType = 0;
+        if (lastAction) {
+            lastActionType = lastAction.type;
+        }
+        let canActs = this.nestActionCanDo(lastActionType);
         let haveAct = false;
         for (let act of canActs) {
             if (actionType === act) {
@@ -492,10 +595,8 @@ class Game {
         let newPlayerCard = [];
         let newPlayerId = [];
         for (let playerId in this._playerDataDic) {
-            if (this._playerDataDic[playerId].lastActType !== Define_1.ActionType.FOLD) {
-                newPlayerCard.push(playerCards[playerId]);
-                newPlayerId.push(playerId);
-            }
+            newPlayerCard.push(playerCards[playerId]);
+            newPlayerId.push(playerId);
         }
         let oddsCalculator = OddsCalculator_1.OddsCalculator.calculate(newPlayerCard, this._dealer.getBoardCards());
         for (let i = 0; i < newPlayerCard.length; i++) {
@@ -518,31 +619,50 @@ class Game {
      * @param players
      */
     getHighRankPlayer(players) {
-        let result = [];
-        let sortPondPlayer = _.sortBy(players, [function (o) { return o.rank; }]);
+        let highers = [];
+        let sortPondPlayer = _.sortBy(players, [function (o) { return -o.rank; }]);
         let firstRank = sortPondPlayer[0].rank;
         for (let i = 0; i < sortPondPlayer.length; i++) {
             if (sortPondPlayer[i].rank === firstRank) {
-                result.push(sortPondPlayer[i].playerId);
+                highers.push(sortPondPlayer[i].playerId);
             }
         }
-        return result;
+        if (highers.length === 1) {
+            return highers;
+        }
+        else if (highers.length > 1) {
+            let result = [];
+            let first = highers[0];
+            let firstHandRank = this._playerDataDic[highers[0]].handRank;
+            for (let i = 1; i < highers.length; i++) {
+                let handRank = this._playerDataDic[highers[i]].handRank;
+                if (firstHandRank.compareTo(handRank) === 1) {
+                    first = highers[i];
+                    firstHandRank = handRank;
+                }
+            }
+            for (let i = 0; i < highers.length; i++) {
+                let handRank = this._playerDataDic[highers[i]].handRank;
+                if (firstHandRank.compareTo(handRank) === 0) {
+                    result.push(first);
+                }
+            }
+            return result;
+        }
+        return null;
     }
     /**
      * 结算所有池子
      */
     calculatorPond() {
         let pondBases = [];
-        let foldAmount = 0;
         for (let playerId in this._playerDataDic) {
-            if (this._playerDataDic[playerId].lastActType !== Define_1.ActionType.FOLD) {
+            if (this._playerDataDic[playerId].betAmount !== 0) {
                 pondBases.push(this._playerDataDic[playerId].betAmount);
-            }
-            else {
-                foldAmount = foldAmount + this._playerDataDic[playerId].betAmount;
             }
         }
         pondBases = _.sortedUniq(pondBases);
+        pondBases = _.sortBy(pondBases);
         for (let i = 0; i < pondBases.length; i++) {
             let pondPlayers = [];
             for (let playerId in this._playerDataDic) {
@@ -553,14 +673,14 @@ class Game {
             let pondAmount = 0;
             if (i === 0) // 底池
              {
-                pondAmount = pondAmount + foldAmount;
-                pondAmount = pondAmount + _.size(pondPlayers) * pondBases[i];
+                pondAmount = _.size(pondPlayers) * pondBases[i];
             }
             else {
                 let base = pondBases[i] - pondBases[i - 1];
-                pondAmount = pondAmount + _.size(pondPlayers) * base;
+                pondAmount = _.size(pondPlayers) * base;
             }
             let winners = this.getHighRankPlayer(pondPlayers);
+            //console.log(" 池子所有玩家 ",pondPlayers," 池子 获胜者 ",winners)
             for (let i = 0; i < winners.length; i++) {
                 let amount = this._playerDataDic[winners[i]].pondGet + pondAmount / winners.length;
                 this._playerDataDic[winners[i]].pondGet = amount;
@@ -579,24 +699,55 @@ class Game {
             this._playerFinalMoneys[playerId] = player.player.money;
         }
     }
+    //* 暂存 测试用到
+    getAllActions() {
+        return this._actions;
+    }
+    getPlayerDataDic() {
+        return this._playerDataDic;
+    }
+    getPlayerMoneys() {
+        return this._playerFinalMoneys;
+    }
+    getBoardCardGroup() {
+        return this._dealer.getBoardCards();
+    }
+    getStreet() {
+        return this._street;
+    }
+    getStack() {
+        return this._stack;
+    }
+    isEnd() {
+        return this._gameStatus === gameStatus.END;
+    }
 }
 exports.default = Game;
 class PlayerData {
 }
+exports.PlayerData = PlayerData;
 class PlayerNotHaveEnoughMoneyError extends Error {
 }
+exports.PlayerNotHaveEnoughMoneyError = PlayerNotHaveEnoughMoneyError;
 class NotPlayerTurnToActionError extends Error {
 }
+exports.NotPlayerTurnToActionError = NotPlayerTurnToActionError;
 class GameIsStartedError extends Error {
 }
+exports.GameIsStartedError = GameIsStartedError;
 class GameIsNotStartError extends Error {
 }
+exports.GameIsNotStartError = GameIsNotStartError;
 class GameIsEndError extends Error {
 }
+exports.GameIsEndError = GameIsEndError;
 class CanNotActionAtStreetError extends Error {
 }
+exports.CanNotActionAtStreetError = CanNotActionAtStreetError;
 class CanNotFindButtonPlayerError extends Error {
 }
+exports.CanNotFindButtonPlayerError = CanNotFindButtonPlayerError;
 class PlayersIsNotEnoughForGameError extends Error {
 }
+exports.PlayersIsNotEnoughForGameError = PlayersIsNotEnoughForGameError;
 //# sourceMappingURL=Game.js.map

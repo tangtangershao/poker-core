@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Player {
-    get id() { return this.id; }
+    get id() { return this._id; }
     get money() { return this._money; }
     /**
      * Creates an instance of Player.

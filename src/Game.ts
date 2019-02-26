@@ -37,7 +37,6 @@ export default class Game {
    * @throws PlayersIsNotEnoughForGameError
    */
   constructor (rule: IRule,players: Player[],stack: Stack,buttonPlayerId: string) {
-
     this._dealer = new Dealer(rule)
     this._rule = rule
     this._players = players
@@ -52,15 +51,15 @@ export default class Game {
   /**
    * get next player that need to action
    *
-   * @returns {Player}
+   * @returns {PlayerData}
    * @memberof Game
    * @throws GameIsNotStartError
    * @throws GameIsEndError
    */
-  getNextPlayer (): Player {
+  getNextPlayer (): PlayerData {
     this.checkGameStart()
     let nestPlayerId = this.getNestActionPlayerId()
-    return this._playerDataDic[nestPlayerId].player
+    return this._playerDataDic[nestPlayerId]
   }
 
   /**
@@ -277,6 +276,7 @@ export default class Game {
       playerIds.push(this._players[i].id)
       this._playerDataDic[this._players[i].id] = {
         player: this._players[i],
+        cards:null,
         lastActType: 0,
         index: i,
         streetBetAmount: 0,
@@ -291,6 +291,10 @@ export default class Game {
     this._dealer.shuffle()
     this._dealer.dealAll(playerIds)
     this._gameStatus = gameStatus.START
+    for(let playerId in this._dealer.getDealtCards()) 
+    {
+      this._playerDataDic[playerId].cards = this._dealer.getDealtCards()[playerId]
+    }
 
     this._streetHighAmount = this._stack.bb
     let sbPlayer = this.getNestPlayerData(this._buttonPlayerId)
@@ -307,7 +311,6 @@ export default class Game {
    * @memberof Game
    */
   endGame () {
-    console.log( " beidong  ",this._gameStatus)
     if (this._gameStatus === gameStatus.NOTSTART)
     {
       throw new GameIsNotStartError()
@@ -485,7 +488,6 @@ export default class Game {
       return
     } else
     {
-      console.log("22")
       let canActionCount = 0
       for (let playerId in this._playerDataDic)
       {
@@ -837,13 +839,29 @@ export default class Game {
   getBoardCardGroup (): CardGroup
   {
     return this._dealer.getBoardCards()
+  }  
+  getStreet (): Street
+  {
+    return this._street
   }
+  
+  getStack (): Stack
+  {
+    return this._stack
+  }
+
+  isEnd (): boolean
+  {
+    return this._gameStatus === gameStatus.END
+  }
+
 
 }
 
-class PlayerData
+export class PlayerData
 {
   player: Player
+  cards:CardGroup
   lastActType: ActionType     // 最后一次行动类型
   index: number               // 在数组_player中的索引
   streetBetAmount: number     // 此轮投入

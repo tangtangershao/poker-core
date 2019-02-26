@@ -1,6 +1,6 @@
 import { Card } from './Card';
 import { CardGroup } from './CardGroup';
-import { IGame } from './Game';
+import { IRule } from './Rule';
 export declare class HandRankAlias {
     static HIGH_CARD: string;
     static PAIR: string;
@@ -17,7 +17,7 @@ export declare class HandRank {
     protected rank: number;
     protected highcards: Card[];
     protected constructor(rank: number, alias: string, highcards: Card[]);
-    static evaluate(game: IGame, cardgroup: CardGroup): HandRank;
+    static evaluate(game: IRule, cardgroup: CardGroup): HandRank;
     getHighCards(): Card[];
     getRank(): number;
     compareTo(handrank: HandRank): number;

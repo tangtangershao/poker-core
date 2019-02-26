@@ -7,15 +7,15 @@ const _ = require("lodash");
 const Card_1 = require("./Card");
 class HandRankAlias {
 }
-HandRankAlias.HIGH_CARD = 'HIGH_CARD';
-HandRankAlias.PAIR = 'PAIR';
-HandRankAlias.TWO_PAIRS = 'TWO_PAIRS';
-HandRankAlias.TRIPS = 'TRIPS';
-HandRankAlias.STRAIGHT = 'STRAIGHT';
-HandRankAlias.FLUSH = 'FLUSH';
-HandRankAlias.FULL_HOUSE = 'FULL_HOUSE';
-HandRankAlias.QUADS = 'QUADS';
-HandRankAlias.STRAIGHT_FLUSH = 'STRAIGHT_FLUSH';
+HandRankAlias.HIGH_CARD = 'HIGH_CARD'; // 高牌
+HandRankAlias.PAIR = 'PAIR'; // 一对儿
+HandRankAlias.TWO_PAIRS = 'TWO_PAIRS'; // 两对儿
+HandRankAlias.TRIPS = 'TRIPS'; // 三张相同牌
+HandRankAlias.STRAIGHT = 'STRAIGHT'; // 顺子
+HandRankAlias.FLUSH = 'FLUSH'; // 同花
+HandRankAlias.FULL_HOUSE = 'FULL_HOUSE'; // 葫芦（三张相同牌 + 一对儿）
+HandRankAlias.QUADS = 'QUADS'; // 四张相同牌
+HandRankAlias.STRAIGHT_FLUSH = 'STRAIGHT_FLUSH'; // 同花顺
 exports.HandRankAlias = HandRankAlias;
 class HandRank {
     constructor(rank, alias, highcards) {

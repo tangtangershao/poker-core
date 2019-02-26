@@ -10,4 +10,5 @@ export declare class CardGroup extends Array {
     countBy(cardType: string): {
         [x: string]: number;
     };
+    toNumArray(): number[];
 }

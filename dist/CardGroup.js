@@ -59,6 +59,34 @@ class CardGroup extends Array {
     countBy(cardType) {
         return _.countBy(this, cardType);
     }
+    //仅限模拟服务器使用
+    toNumArray() {
+        const result = [];
+        for (const card of this) {
+            let cardId = 0;
+            let num = card.getRank() - 2;
+            if (num === 0)
+                num = 13;
+            let type = 0;
+            switch (card.getSuit()) {
+                case Card_1.Suit.CLUB: // 4,//方块
+                    type = 4;
+                    break;
+                case Card_1.Suit.DIAMOND: //= 3, //菱形
+                    type = 3;
+                    break;
+                case Card_1.Suit.HEART: // 2, //红心
+                    type = 2;
+                    break;
+                case Card_1.Suit.SPADE: //1, //黑桃
+                    type = 1;
+                    break;
+            }
+            cardId = num + (type - 1) * 13;
+            result.push(cardId);
+        }
+        return result;
+    }
 }
 exports.CardGroup = CardGroup;
 //# sourceMappingURL=CardGroup.js.map

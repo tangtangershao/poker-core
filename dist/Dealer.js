@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const CardGroup_1 = require("./CardGroup");
 const _1 = require(".");
 const Card_1 = require("./Card");
 const lodash_1 = require("lodash");
@@ -16,15 +17,19 @@ class Dealer {
      * will clean the dealt history
      */
     shuffle() {
-        this.boardCards = null;
-        this.playerCards = null;
+        this.boardCards = new CardGroup_1.CardGroup();
+        this.playerCards = {};
         this.isDealAll = false;
         this.resetCards();
     }
     /**
      * get all five board cards
+     * @throws NotBeenDealtError
      */
     getBoardCards() {
+        if (!this.isDealAll) {
+            throw new NotBeenDealtError();
+        }
         return this.boardCards;
     }
     /**
@@ -53,7 +58,7 @@ class Dealer {
         }
         let cardCount = 0;
         for (let playerId of playerIds) {
-            let cardGroup;
+            let cardGroup = new CardGroup_1.CardGroup();
             cardGroup.push(this.allCards[cardCount]);
             cardCount += 1;
             cardGroup.push(this.allCards[cardCount]);
@@ -67,7 +72,7 @@ class Dealer {
         this.isDealAll = true;
     }
     resetCards() {
-        this.allCards = null;
+        this.allCards = new CardGroup_1.CardGroup();
         if (this.rule.A6789_STRAIGHT) {
             for (let i = 1; i < 5; i++) {
                 let suit = i;
@@ -111,6 +116,8 @@ class Dealer {
 exports.default = Dealer;
 class NotBeenDealtError extends Error {
 }
+exports.NotBeenDealtError = NotBeenDealtError;
 class HadBeenDealtError extends Error {
 }
+exports.HadBeenDealtError = HadBeenDealtError;
 //# sourceMappingURL=Dealer.js.map

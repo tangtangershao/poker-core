@@ -17,6 +17,7 @@ export default class Dealer {
     shuffle(): void;
     /**
      * get all five board cards
+     * @throws NotBeenDealtError
      */
     getBoardCards(): CardGroup;
     /**
@@ -37,4 +38,8 @@ export default class Dealer {
      */
     dealAll(playerIds: string[]): void;
     private resetCards;
+}
+export declare class NotBeenDealtError extends Error {
+}
+export declare class HadBeenDealtError extends Error {
 }
