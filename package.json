@@ -1,6 +1,6 @@
 {
   "name": "poker-core",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "A pre-flop and post-flop odds calculator for Texas Holdem",
   "main": "./dist/index.js",
   "typings": "./dts/index.d.ts",

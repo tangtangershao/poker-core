@@ -48,7 +48,7 @@ export declare enum RelactivePosition {
 /**
  * 牌局记录
  */
-export default class History {
+export declare class History {
     BoardCards: string[];
     playerCards: {
         [playerId: string]: string[];

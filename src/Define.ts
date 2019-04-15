@@ -62,7 +62,7 @@ export enum RelactivePosition{
 /**
  * 牌局记录
  */
-export default class History {
+export class History {
 
   // 当前街显示的全部牌
   BoardCards: string[]

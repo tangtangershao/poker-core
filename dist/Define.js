@@ -52,7 +52,7 @@ var RelactivePosition;
  */
 class History {
 }
-exports.default = History;
+exports.History = History;
 /**
  * 牌局记录
  */
