@@ -1,6 +1,4 @@
 import History, { Street, PlayerStatus, Action, StreetStatus, HistoryPlayerOptions } from "./Define";
-import { Card } from "./Card";
-import { CardGroup } from "./CardGroup";
 export default class HistoryPlayer {
     private _history;
     constructor(options: HistoryPlayerOptions | History);
@@ -38,21 +36,21 @@ export default class HistoryPlayer {
      * 设置翻牌圈的牌
      * @param cards
      */
-    setFlopCards(cards: Card[]): void;
+    setFlopCards(cards: string[]): void;
     /**
      * 设置转牌圈的牌
      * @param card
      */
-    setTurnCards(card: Card): void;
+    setTurnCards(card: string): void;
     /**
      * 设置河牌圈的牌
      * @param card
      */
-    setRiverCards(card: Card): void;
+    setRiverCards(card: string): void;
     /**
      * 获取公共牌
      */
-    getBoardCards(): CardGroup;
+    getBoardCards(): string[];
     /**
      * 获取当前需要行动玩家的状态
      * 如果当前街不允许行动，则返回空
@@ -89,14 +87,13 @@ export default class HistoryPlayer {
      * 获取结算结果 playerCards {[playerId: string]: CardGroup}
      */
     showDown(playerCards: {
-        [playerId: string]: CardGroup;
+        [playerId: string]: string[];
     }, playerWins: {
         [playerId: string]: number;
     }): any;
     private getPlayerPostion;
     private getPlayerrelactivePosition;
     private getminiRaiseAmount;
-    private _dealer;
     private _actions;
     private _players;
     private _rule;
@@ -104,6 +101,7 @@ export default class HistoryPlayer {
     private _playerFinalMoneys;
     private _buttonPlayerId;
     private _stack;
+    private _boardCards;
     private _streetHighAmount;
     private _streeLastPlayerId;
     private _playerDataDic;
@@ -154,9 +152,5 @@ export default class HistoryPlayer {
      * 转到下一轮
      */
     private changeStreet;
-    /**
-     * 设置玩家手牌排名数据
-     */
-    private setPlayerHandRank;
     private getBoardCardGroup;
 }

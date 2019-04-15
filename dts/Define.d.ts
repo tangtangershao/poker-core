@@ -1,5 +1,4 @@
 import { IRule } from "./Rule";
-import { CardGroup } from "./CardGroup";
 export declare enum ActionType {
     BET = 1,
     CALL = 2,
@@ -50,9 +49,9 @@ export declare enum RelactivePosition {
  * 牌局记录
  */
 export default class History {
-    BoardCards: CardGroup;
+    BoardCards: string[];
     playerCards: {
-        [playerId: string]: CardGroup;
+        [playerId: string]: string[];
     };
     rule?: IRule;
     platform: string;
@@ -82,7 +81,7 @@ export default class History {
  */
 export declare class HistoryPlayerOptions {
     playerCards: {
-        [playerId: string]: CardGroup;
+        [playerId: string]: string[];
     };
     rule?: IRule;
     platform: string;

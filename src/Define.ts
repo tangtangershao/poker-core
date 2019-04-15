@@ -65,9 +65,9 @@ export enum RelactivePosition{
 export default class History {
 
   // 当前街显示的全部牌
-  BoardCards: CardGroup
+  BoardCards: string[]
 
-  playerCards: {[playerId: string]: CardGroup}
+  playerCards: {[playerId: string]: string[]}
 
   // 当rule为空的时候，默认使用德州6人台规则
   rule?: IRule
@@ -76,7 +76,7 @@ export default class History {
   platform:string
 
   // 当前街
-  street: Street                                       
+  street: Street
   
   // 玩家列表
   players: {id:string,money:number,seat:number,misc: {[key: string]: any}}[]
@@ -108,7 +108,7 @@ export default class History {
  */
 export class HistoryPlayerOptions {
 
-  playerCards: {[playerId: string]: CardGroup}
+  playerCards: {[playerId: string]: string[]}
 
   // 当rule为空的时候，默认使用德州6人台规则
   rule?: IRule

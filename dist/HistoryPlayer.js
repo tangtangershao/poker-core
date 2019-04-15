@@ -2,12 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Define_1 = require("./Define");
 const Rule_1 = require("./Rule");
-const Dealer_1 = require("./Dealer");
 const _ = require("lodash");
-const OddsCalculator_1 = require("./OddsCalculator");
-const CardGroup_1 = require("./CardGroup");
 class HistoryPlayer {
     constructor(options) {
+        this._boardCards = [];
         this._pondsDic = [];
         if (!options.hasOwnProperty('actions')) {
             if (this._history == null) {
@@ -21,7 +19,7 @@ class HistoryPlayer {
                 this._history.playerCards = options.playerCards;
                 this._history.startTime = options.startTime;
                 this.setGame();
-                this._history.BoardCards = this.getBoardCardGroup();
+                this._history.BoardCards = this._boardCards;
                 this._history.actions = this._actions;
                 this._history.street = this._street;
             }
@@ -81,21 +79,21 @@ class HistoryPlayer {
      * @param cards
      */
     setFlopCards(cards) {
-        this.setFlopCards(cards);
+        this._boardCards = cards;
     }
     /**
      * 设置转牌圈的牌
      * @param card
      */
     setTurnCards(card) {
-        this.setTurnCards(card);
+        this._boardCards.push(card);
     }
     /**
      * 设置河牌圈的牌
      * @param card
      */
     setRiverCards(card) {
-        this.setTurnCards(card);
+        this._boardCards.push(card);
     }
     /**
      * 获取公共牌
@@ -371,12 +369,13 @@ class HistoryPlayer {
         this._history.players.forEach(element => {
             players.push(element);
         });
-        this._dealer = new Dealer_1.default(this._history.rule);
         this._rule = this._history.rule;
         this._players = players;
         this._actions = [];
-        if (hasStart)
+        if (hasStart) {
             this._actions = this._history.actions;
+            this._boardCards = this._history.BoardCards;
+        }
         this._buttonPlayerId = this._history.buttenPlayerId;
         this._stack = this._history.stack;
         this._playerDataDic = {};
@@ -400,12 +399,9 @@ class HistoryPlayer {
         for (let playerId in this._history.playerCards) {
             this._playerDataDic[playerId].cards = this._history.playerCards[playerId];
         }
-        this._dealer.shuffle();
-        this._dealer.dealAll(playerIds);
         if (hasStart) {
             this._street = this._history.street;
             this._streetHighAmount = this._stack.bb;
-            this._dealer.setBoardCards(this._history.BoardCards);
             this._streeLastPlayerId = this.getLastActionNotFold(false).playerId;
             this._streetHighAmount = this.getLastActionNotFold(true) ? this.getLastActionNotFold(true).amount : 0;
         }
@@ -660,25 +656,9 @@ class HistoryPlayer {
         this._streeLastPlayerId = "";
         this._streetHighAmount = 0;
     }
-    /**
-     * 设置玩家手牌排名数据
-     */
-    setPlayerHandRank() {
-        let newPlayerCard = [];
-        let newPlayerId = [];
-        for (let playerId in this._playerDataDic) {
-            newPlayerCard.push(this._playerDataDic[playerId].cards);
-            newPlayerId.push(playerId);
-        }
-        let oddsCalculator = OddsCalculator_1.OddsCalculator.calculate(newPlayerCard, this._dealer.getBoardCards());
-        for (let i = 0; i < newPlayerCard.length; i++) {
-            let handRank = oddsCalculator.getHandRank(i);
-            this._playerDataDic[newPlayerId[i]].handRank = handRank;
-        }
-    }
     getBoardCardGroup() {
         let cards = [];
-        let boardCards = this._dealer.getBoardCards();
+        let boardCards = this._boardCards;
         switch (this._street) {
             case Define_1.Street.PREFLOP: break;
             case Define_1.Street.FLOP:
@@ -691,10 +671,12 @@ class HistoryPlayer {
                 cards = _.slice(boardCards, 0, 5);
                 break;
         }
-        return CardGroup_1.CardGroup.fromCards(cards);
+        return cards;
     }
 }
 exports.default = HistoryPlayer;
 class PondsData {
+}
+class PlayerData {
 }
 //# sourceMappingURL=HistoryPlayer.js.map

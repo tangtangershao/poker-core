@@ -15,7 +15,7 @@ enum gameStatus {
 }
 
 export default class Game {
-  readonly gameId:number
+  readonly gameId: number
   private _dealer: Dealer
   private _actions: Action[]
   private _players: Player[]
@@ -78,7 +78,7 @@ export default class Game {
   getNextPlayerCurStreet (): PlayerData {
     this.checkGameStart()
     if(this._streeLastPlayerId === '' && this._streetHighAmount === 0)
-    return null
+      return null
     let nestPlayerId = this.getNestActionPlayerId()
     return this._playerDataDic[nestPlayerId]
   }
@@ -600,35 +600,35 @@ export default class Game {
       {
         //逐个计算若没有匹配的 新池产生
         _.orderBy(this._pondsDic,['max'])
-         let bigId = -1
-         for(let i=0;i<this._pondsDic.length;i++)
-         {
-           if(this._pondsDic[i].max > act.amount)
-           {
-             bigId = i
-             break
-           }
-         }
-         if(bigId === 0)
-         {
-            this._pondsDic.push({base:act.amount,max:act.amount })
-            pond0.base = pond0.base - act.amount
-            return
-         }
-         else if(bigId === -1)
-         {
-           let pondLast= this._pondsDic[this._pondsDic.length]
-           this._pondsDic.push({base:act.amount - pondLast.max ,max:act.amount })
-           return
-         }
-         else
-         {
-           let pondBig= this._pondsDic[bigId]
-           pondBig.base = pondBig.max - act.amount
-           let pondSmal= this._pondsDic[bigId-1]
-           this._pondsDic.push({base:act.amount - pondSmal.max ,max:act.amount })
-           return
-         }
+        let bigId = -1
+        for(let i=0;i<this._pondsDic.length;i++)
+        {
+          if(this._pondsDic[i].max > act.amount)
+          {
+            bigId = i
+            break
+          }
+        }
+        if(bigId === 0)
+        {
+          this._pondsDic.push({base:act.amount,max:act.amount })
+          pond0.base = pond0.base - act.amount
+          return
+        }
+        else if(bigId === -1)
+        {
+          let pondLast= this._pondsDic[this._pondsDic.length]
+          this._pondsDic.push({base:act.amount - pondLast.max ,max:act.amount })
+          return
+        }
+        else
+        {
+          let pondBig= this._pondsDic[bigId]
+          pondBig.base = pondBig.max - act.amount
+          let pondSmal= this._pondsDic[bigId- 1]
+          this._pondsDic.push({base:act.amount - pondSmal.max ,max:act.amount })
+          return
+        }
       }
     }
     else
@@ -651,37 +651,37 @@ export default class Game {
       }
       else
       {
-         //逐个计算若没有匹配的 新池产生
-         _.orderBy(this._pondsDic,['max'])
-         let bigId = -1
-         for(let i=0;i<this._pondsDic.length;i++)
-         {
-           if(this._pondsDic[i].max > act.amount)
-           {
-             bigId = i
-             break
-           }
-         }
-         if(bigId === 0)
-         {
-            this._pondsDic.push({base:act.amount,max:act.amount })
-            pond0.base = pond0.base - act.amount
-            return
-         }
-         else if(bigId === -1)
-         {
-           let pondLast= this._pondsDic[this._pondsDic.length]
-           this._pondsDic.push({base:act.amount - pondLast.max ,max:act.amount })
-           return
-         }
-         else
-         {
-           let pondBig= this._pondsDic[bigId]
-           pondBig.base = pondBig.max - act.amount
-           let pondSmal= this._pondsDic[bigId-1]
-           this._pondsDic.push({base:act.amount - pondSmal.max ,max:act.amount })
-           return
-         }
+        //逐个计算若没有匹配的 新池产生
+        _.orderBy(this._pondsDic,['max'])
+        let bigId = -1
+        for(let i=0;i<this._pondsDic.length;i++)
+        {
+          if(this._pondsDic[i].max > act.amount)
+          {
+            bigId = i
+            break
+          }
+        }
+        if(bigId === 0)
+        {
+          this._pondsDic.push({base:act.amount,max:act.amount })
+          pond0.base = pond0.base - act.amount
+          return
+        }
+        else if(bigId === -1)
+        {
+          let pondLast= this._pondsDic[this._pondsDic.length]
+          this._pondsDic.push({base:act.amount - pondLast.max ,max:act.amount })
+          return
+        }
+        else
+        {
+          let pondBig= this._pondsDic[bigId]
+          pondBig.base = pondBig.max - act.amount
+          let pondSmal= this._pondsDic[bigId-1]
+          this._pondsDic.push({base:act.amount - pondSmal.max ,max:act.amount })
+          return
+        }
       }
     }
 
@@ -975,11 +975,11 @@ export default class Game {
       let pondAmount = 0
       for (let playerId in this._playerDataDic)
       {
-        if(i===0)
+        if(i === 0)
         {
           pondAmount = pondAmount + this._playerDataDic[playerId].betAmount
           pondPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId }) 
-          if(this._playerDataDic[playerId].lastActType!== ActionType.FOLD)
+          if(this._playerDataDic[playerId].lastActType !== ActionType.FOLD)
           {
             pondleftPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId }) 
           }
@@ -988,7 +988,7 @@ export default class Game {
         {
           if (this._playerDataDic[playerId].betAmount >= pondBases[i]) {
             pondPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId }) 
-            if(this._playerDataDic[playerId].lastActType!== ActionType.FOLD)
+            if(this._playerDataDic[playerId].lastActType !== ActionType.FOLD)
             {
               pondleftPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId }) 
             }
