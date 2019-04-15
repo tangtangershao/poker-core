@@ -1,5 +1,5 @@
 import History, { Street, PlayerStatus, Action, StreetStatus, HistoryPlayerOptions } from "./Define";
-export default class HistoryPlayer {
+export declare class HistoryPlayer {
     private _history;
     constructor(options: HistoryPlayerOptions | History);
     /**

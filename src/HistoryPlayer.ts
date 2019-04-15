@@ -8,7 +8,7 @@ import  * as _ from 'lodash'
 import { OddsCalculator } from './OddsCalculator'
 import { HandRank } from './HandRank'
 import { CardGroup } from "./CardGroup";
-export default class HistoryPlayer {
+export  class HistoryPlayer {
 
   private _history: History
 

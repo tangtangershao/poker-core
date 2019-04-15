@@ -674,7 +674,7 @@ class HistoryPlayer {
         return cards;
     }
 }
-exports.default = HistoryPlayer;
+exports.HistoryPlayer = HistoryPlayer;
 class PondsData {
 }
 class PlayerData {
