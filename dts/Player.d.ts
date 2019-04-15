@@ -1,9 +1,8 @@
 export default class Player {
-    readonly id: string;
-    readonly money: number;
-    private _id;
+    id: string;
+    money: number;
+    seat: number;
     private _misc;
-    private _money;
     /**
      * Creates an instance of Player.
      * @param {string} id

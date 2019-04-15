@@ -71,6 +71,39 @@ class Dealer {
         }
         this.isDealAll = true;
     }
+    setBoardCards(cards) {
+        if (!this.isDealAll) {
+            throw new NotBeenDealtError();
+        }
+        if (cards) {
+            for (let i = 0; i < cards.length; i++) {
+                this.boardCards[i] = cards[i];
+            }
+        }
+    }
+    setFlopCards(cards) {
+        if (!this.isDealAll) {
+            throw new NotBeenDealtError();
+        }
+        if (cards && cards.length === 3) {
+            this.boardCards[0] = cards[0];
+            this.boardCards[1] = cards[1];
+            this.boardCards[2] = cards[2];
+        }
+    }
+    setTurnCard(card) {
+        if (!this.isDealAll) {
+            throw new NotBeenDealtError();
+        }
+        if (card)
+            this.boardCards[3] = card;
+    }
+    setRiverCard(card) {
+        if (!this.isDealAll) {
+            throw new NotBeenDealtError();
+        }
+        this.boardCards[4] = card;
+    }
     resetCards() {
         this.allCards = new CardGroup_1.CardGroup();
         if (this.rule.A6789_STRAIGHT) {

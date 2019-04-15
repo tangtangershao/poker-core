@@ -1,11 +1,10 @@
 
 export default class Player {
 
-  get id(): string { return this._id }
-  get money(): number { return this._money }
-  private _id: string
+  id:string 
+  money:number
+  seat:number
   private _misc: {[key: string]: any}
-  private _money: number
 
   /**
    * Creates an instance of Player.
@@ -15,8 +14,8 @@ export default class Player {
    * @memberof Player
    */
   constructor (id: string,money: number,misc?: {[key: string]: any}) {
-    this._id = id
-    this._money = money
+    this.id = id
+    this.money = money
     this._misc = misc
   }
 
@@ -35,14 +34,14 @@ export default class Player {
   }
 
   addMoney (amount: number) {
-    this._money += amount
+    this.money += amount
   }
 
   deductMoney (amount: number) {
-    this._money -= amount
+    this.money -= amount
   }
 
   resetMoney (amount: number) {
-    this._money = 10000
+    this.money = amount
   }
 }

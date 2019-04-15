@@ -6,6 +6,7 @@ import { CardGroup, HandRank } from '.'
 import { Dictionary } from 'lodash'
 import  * as _ from 'lodash'
 import { OddsCalculator } from './OddsCalculator'
+import { Card } from "./Card";
 
 enum gameStatus {
   NOTSTART,
@@ -14,7 +15,7 @@ enum gameStatus {
 }
 
 export default class Game {
-  readonly  gameId:number
+  readonly gameId:number
   private _dealer: Dealer
   private _actions: Action[]
   private _players: Player[]
@@ -31,7 +32,9 @@ export default class Game {
   private _streeLastPlayerId: string // 此轮最后行动玩家
 
   private _playerDataDic: {[playerId: string]: PlayerData}
+
   private _pondsDic: PondsData[] =  []
+
   /**
    *
    * @throws CanNotFindButtonPlayerError
@@ -325,6 +328,7 @@ export default class Game {
 
     this._dealer.shuffle()
     this._dealer.dealAll(playerIds)
+    this._boardCards = this._dealer.getBoardCards()
     this._gameStatus = gameStatus.START
     for(let playerId in this._dealer.getDealtCards()) 
     {
@@ -705,6 +709,14 @@ export default class Game {
     return null
   }
 
+   /**
+   * 获取此轮最高下注
+   */
+  getLastActionBet ():number
+  {
+    return this._streetHighAmount
+  }
+
   /**
    * 根据上次行动类型 判定下次可行动类型列表
    * @param actionType 上次行动类型
@@ -835,6 +847,30 @@ export default class Game {
     this._streetHighAmount = 0
   }
 
+ /**
+   * 设置翻牌圈的牌
+   * @param cards
+   */
+  setFlopCards(cards:Card[]){
+    this._dealer.setFlopCards(cards)
+  }
+
+  /**
+   * 设置转牌圈的牌
+   * @param card
+   */
+  setTurnCards(card:Card){
+    this._dealer.setTurnCard(card)
+  }
+  
+  /**
+   * 设置河牌圈的牌
+   * @param card
+   */
+  setRiverCards(card:Card){
+    this._dealer.setRiverCard(card)
+  }
+
   /**
    * 设置玩家手牌排名数据
    */
@@ -935,6 +971,7 @@ export default class Game {
     for (let i = 0;i < pondBases.length;i++)
     {
       let pondPlayers = []
+      let pondleftPlayers = []
       let pondAmount = 0
       for (let playerId in this._playerDataDic)
       {
@@ -942,16 +979,23 @@ export default class Game {
         {
           pondAmount = pondAmount + this._playerDataDic[playerId].betAmount
           pondPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId }) 
+          if(this._playerDataDic[playerId].lastActType!== ActionType.FOLD)
+          {
+            pondleftPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId }) 
+          }
         }
         else
         {
           if (this._playerDataDic[playerId].betAmount >= pondBases[i]) {
-         
-            pondPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId }) }
+            pondPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId }) 
+            if(this._playerDataDic[playerId].lastActType!== ActionType.FOLD)
+            {
+              pondleftPlayers.push({ rank: this.getPlayerRank(playerId),playerId: playerId }) 
+            }
+          }
         }
       }
 
-     
       if (i === 0) // 底池
       {
       }else
@@ -959,7 +1003,7 @@ export default class Game {
         let base = pondBases[i] - pondBases[i - 1]
         pondAmount = _.size(pondPlayers) * base
       }
-      let winners = this.getHighRankPlayer(pondPlayers)
+      let winners = this.getHighRankPlayer(pondleftPlayers)
       //console.log(" 池子所有玩家 ",pondPlayers," 池子 获胜者 ",winners)
       for (let i = 0;i < winners.length;i++)
       {
@@ -968,7 +1012,6 @@ export default class Game {
       }
     }
     this.setPlayerFinalMoney()
-    this.getPodsAmount()
   }
 
   /**
@@ -1003,7 +1046,7 @@ export default class Game {
 
   getBoardCardGroup (): CardGroup
   {
-    return this._dealer.getBoardCards()
+    return this._boardCards
   }  
   getStreet (): Street
   {
@@ -1024,12 +1067,9 @@ export default class Game {
   {
     return this._buttonPlayerId
   }
-
-
-
 }
 
-class PlayerData
+export class PlayerData
 {
   player: Player
   cards:CardGroup

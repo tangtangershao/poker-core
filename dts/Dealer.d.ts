@@ -1,5 +1,6 @@
 import { IRule } from './Rule';
 import { CardGroup } from './CardGroup';
+import { Card } from '.';
 export default class Dealer {
     private rule;
     private allCards;
@@ -37,6 +38,10 @@ export default class Dealer {
      * @throws HadBeenDealtError
      */
     dealAll(playerIds: string[]): void;
+    setBoardCards(cards?: Card[]): void;
+    setFlopCards(cards?: Card[]): void;
+    setTurnCard(card?: Card): void;
+    setRiverCard(card?: Card): void;
     private resetCards;
 }
 export declare class NotBeenDealtError extends Error {

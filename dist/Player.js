@@ -1,8 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Player {
-    get id() { return this._id; }
-    get money() { return this._money; }
     /**
      * Creates an instance of Player.
      * @param {string} id
@@ -11,8 +9,8 @@ class Player {
      * @memberof Player
      */
     constructor(id, money, misc) {
-        this._id = id;
-        this._money = money;
+        this.id = id;
+        this.money = money;
         this._misc = misc;
     }
     /**
@@ -29,13 +27,13 @@ class Player {
         return this._misc[key];
     }
     addMoney(amount) {
-        this._money += amount;
+        this.money += amount;
     }
     deductMoney(amount) {
-        this._money -= amount;
+        this.money -= amount;
     }
     resetMoney(amount) {
-        this._money = 10000;
+        this.money = amount;
     }
 }
 exports.default = Player;

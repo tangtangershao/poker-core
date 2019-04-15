@@ -2,7 +2,9 @@ import { Action, Street, ActionType, Stack } from './Define';
 import Player from './Player';
 import { IRule } from './Rule';
 import { CardGroup, HandRank } from '.';
+import { Card } from "./Card";
 export default class Game {
+    readonly gameId: number;
     private _dealer;
     private _actions;
     private _players;
@@ -17,12 +19,13 @@ export default class Game {
     private _streetHighAmount;
     private _streeLastPlayerId;
     private _playerDataDic;
+    private _pondsDic;
     /**
      *
      * @throws CanNotFindButtonPlayerError
      * @throws PlayersIsNotEnoughForGameError
      */
-    constructor(rule: IRule, players: Player[], stack: Stack, buttonPlayerId: string);
+    constructor(gameId: number, rule: IRule, players: Player[], stack: Stack, buttonPlayerId: string);
     /**
      * get next player that need to action
      *
@@ -32,6 +35,15 @@ export default class Game {
      * @throws GameIsEndError
      */
     getNextPlayer(): PlayerData;
+    /**
+     * get next player cur street that need to action
+     *
+     * @returns {PlayerData}
+     * @memberof Game
+     * @throws GameIsNotStartError
+     * @throws GameIsEndError
+     */
+    getNextPlayerCurStreet(): PlayerData;
     /**
      * Player bet
      *
@@ -187,10 +199,15 @@ export default class Game {
      * @param amount 行动金额
      */
     private recordAction;
+    private setPonds;
     /**
      * 获取上次有效行动（盖牌和每轮开始 返回空行动 因为无法用来判定下次行动）
      */
     private getLastActionNotFold;
+    /**
+    * 获取此轮最高下注
+    */
+    getLastActionBet(): number;
     /**
      * 根据上次行动类型 判定下次可行动类型列表
      * @param actionType 上次行动类型
@@ -211,6 +228,21 @@ export default class Game {
      * 转到下一轮
      */
     private changeStreet;
+    /**
+      * 设置翻牌圈的牌
+      * @param cards
+      */
+    setFlopCards(cards: Card[]): void;
+    /**
+     * 设置转牌圈的牌
+     * @param card
+     */
+    setTurnCards(card: Card): void;
+    /**
+     * 设置河牌圈的牌
+     * @param card
+     */
+    setRiverCards(card: Card): void;
     /**
      * 设置玩家手牌排名数据
      */
@@ -240,6 +272,7 @@ export default class Game {
     getStreet(): Street;
     getStack(): Stack;
     isEnd(): boolean;
+    btnPlayerId(): string;
 }
 export declare class PlayerData {
     player: Player;
