@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Define_1 = require("./Define");
 const Rule_1 = require("./Rule");
+const Player_1 = require("./Player");
 const _ = require("lodash");
 class HistoryPlayer {
     constructor(options) {
@@ -9,7 +10,7 @@ class HistoryPlayer {
         this._pondsDic = [];
         if (!options.hasOwnProperty('actions')) {
             if (this._history == null) {
-                this._history = new Define_1.default();
+                this._history = new Define_1.History();
                 this._history.gameId = options.gameId;
                 this._history.platform = options.platform;
                 this._history.buttenPlayerId = options.buttenPlayerId;
@@ -367,7 +368,8 @@ class HistoryPlayer {
     setGame(hasStart = false) {
         let players = [];
         this._history.players.forEach(element => {
-            players.push(element);
+            let player = new Player_1.default(element.id, element.money, element.seat, element.misc);
+            players.push(player);
         });
         this._rule = this._history.rule;
         this._players = players;
@@ -469,6 +471,7 @@ class HistoryPlayer {
      * @param playerId 玩家id
      */
     getNestPlayerData(playerId) {
+        console.log('playerId  ', playerId);
         let index = this._playerDataDic[playerId].index;
         index = index + 1;
         if (index === this._players.length) {

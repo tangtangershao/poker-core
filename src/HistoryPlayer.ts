@@ -1,5 +1,5 @@
 import Game from './Game';
-import History, { Street, PlayerStatus, Action, StreetStatus, HistoryPlayerOptions, RelactivePosition, ActionType, Position ,Stack } from "./Define";
+import  { Street, History,PlayerStatus, Action, StreetStatus, HistoryPlayerOptions, RelactivePosition, ActionType, Position ,Stack } from "./Define";
 import { IRule, FullDeckRule } from './Rule';
 import Player from "./Player";
 import { Card } from "./Card";
@@ -34,7 +34,7 @@ export  class HistoryPlayer {
     else
     {
       if (this._history == null) {
-        this._history = <History>options
+        this._history = options as History
         this._history.rule = options.rule ? options.rule :new FullDeckRule()
         this.setGame(true)
       }
@@ -456,11 +456,13 @@ export  class HistoryPlayer {
 
   private setGame(hasStart = false)
   {
-    let players :any[] = []
+    let players :Player[] = []
     this._history.players.forEach(element => {
-    players.push(element)
+      let player = new Player(element.id,element.money,element.seat,element.misc)
+      players.push(player)
     });
     this._rule = this._history.rule
+   
     this._players = players
     this._actions = []
     if(hasStart)
@@ -581,6 +583,7 @@ export  class HistoryPlayer {
    */
   private getNestPlayerData (playerId: string): PlayerData
   {
+    console.log('playerId  ',playerId)
     let index = this._playerDataDic[playerId].index
     index = index + 1
     if (index === this._players.length) { index = 0 }

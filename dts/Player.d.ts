@@ -2,7 +2,9 @@ export default class Player {
     id: string;
     money: number;
     seat: number;
-    private _misc;
+    misc: {
+        [key: string]: any;
+    };
     /**
      * Creates an instance of Player.
      * @param {string} id
@@ -10,7 +12,7 @@ export default class Player {
      * @param {{[key: string]: any}} [misc] anything of the player
      * @memberof Player
      */
-    constructor(id: string, money: number, misc?: {
+    constructor(id: string, money: number, seat?: number, misc?: {
         [key: string]: any;
     });
     /**

@@ -8,10 +8,11 @@ class Player {
      * @param {{[key: string]: any}} [misc] anything of the player
      * @memberof Player
      */
-    constructor(id, money, misc) {
+    constructor(id, money, seat, misc) {
         this.id = id;
         this.money = money;
-        this._misc = misc;
+        this.misc = misc;
+        this.seat = seat;
     }
     /**
      * get property of the player
@@ -21,10 +22,10 @@ class Player {
      * @memberof Player
      */
     getMisc(key) {
-        if (!this._misc) {
+        if (!this.misc) {
             return null;
         }
-        return this._misc[key];
+        return this.misc[key];
     }
     addMoney(amount) {
         this.money += amount;
