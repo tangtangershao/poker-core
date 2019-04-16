@@ -108,7 +108,10 @@ class HistoryPlayer {
      * 如果当前街不允许行动，则返回空
      */
     getCurrentPlayerStatus() {
-        let nextPlayer = this.getNextPlayerCurStreet();
+        let nextId = this.getNestActionPlayerId();
+        if (!nextId)
+            return null;
+        let nextPlayer = this._playerDataDic[nextId];
         if (nextPlayer) {
             let playeStatus = new Define_1.PlayerStatus();
             playeStatus.playerId = parseInt(nextPlayer.player.id);
@@ -128,7 +131,10 @@ class HistoryPlayer {
     getPlayerStatus(playerId) {
         let player = this._playerDataDic[playerId];
         if (player) {
-            let nextPlayer = this.getNextPlayerCurStreet();
+            let nextId = this.getNestActionPlayerId();
+            if (!nextId)
+                return null;
+            let nextPlayer = this._playerDataDic[nextId];
             let playeStatus = new Define_1.PlayerStatus();
             playeStatus.playerId = parseInt(player.player.id);
             playeStatus.money = player.player.money;
@@ -213,6 +219,16 @@ class HistoryPlayer {
         }
         this._history.playerCollects = playePondWin;
     }
+    /**
+     * 设置街
+     */
+    setStreet(street) {
+        this._street = street;
+        for (let playerId in this._playerDataDic) {
+            this._playerDataDic[playerId].streetBetAmount = 0;
+        }
+        this._streetHighAmount = 0;
+    }
     getPlayerPostion(playerId) {
         let players = this._history.players;
         let btnPlayer = this._history.buttenPlayerId;
@@ -295,18 +311,11 @@ class HistoryPlayer {
         let nestPlayerId = this.getNestActionPlayerId();
         return this._playerDataDic[nestPlayerId];
     }
-    getNextPlayerCurStreet() {
-        if (this._streeLastPlayerId === '' && this._streetHighAmount === 0)
-            return null;
-        let nestPlayerId = this.getNestActionPlayerId();
-        return this._playerDataDic[nestPlayerId];
-    }
     Bet(playerId, amount) {
         let player = this.getPlayerData(playerId);
         let action = this.recordAction(playerId, Define_1.ActionType.BET, amount);
         player.player.deductMoney(amount);
         this._streetHighAmount = amount;
-        this._streeLastPlayerId = this.getLastActionNotFold(false).playerId;
         return action;
     }
     Raise(playerId, amount) {
@@ -314,31 +323,15 @@ class HistoryPlayer {
         let action = this.recordAction(playerId, Define_1.ActionType.RAISE, amount);
         player.player.deductMoney(amount);
         this._streetHighAmount = amount;
-        this._streeLastPlayerId = this.getLastActionNotFold(false).playerId;
         return action;
     }
     Check(playerId) {
         let action = this.recordAction(playerId, Define_1.ActionType.CHECK);
-        if (this._streetHighAmount === 0 && this._streeLastPlayerId === '') {
-            this._streeLastPlayerId = this.getLastActionNotFold(false).playerId;
-        }
-        if (this.getNextPlayer()) {
-            let nextPlayer = this.getNextPlayer();
-            if (nextPlayer.player.id === this._streeLastPlayerId) {
-                this.changeStreet();
-            }
-        }
         return action;
     }
     Fold(playerId) {
         let player = this.getPlayerData(playerId);
         let action = this.recordAction(playerId, Define_1.ActionType.FOLD);
-        if (this.getNextPlayer()) {
-            let nextPlayer = this.getNextPlayer();
-            if (nextPlayer.player.id === this._streeLastPlayerId) {
-                this.changeStreet();
-            }
-        }
         return action;
     }
     Call(playerId) {
@@ -346,12 +339,6 @@ class HistoryPlayer {
         let amount = this._streetHighAmount - player.streetBetAmount;
         let action = this.recordAction(playerId, Define_1.ActionType.CALL, amount);
         player.player.deductMoney(amount);
-        if (this.getNextPlayer()) {
-            let nextPlayer = this.getNextPlayer();
-            if (nextPlayer.player.id === this._streeLastPlayerId) {
-                this.changeStreet();
-            }
-        }
         return action;
     }
     AllIn(playerId) {
@@ -361,7 +348,6 @@ class HistoryPlayer {
         player.player.deductMoney(amount);
         if (amount > this._streetHighAmount) {
             this._streetHighAmount = amount;
-            this._streeLastPlayerId = this.getLastActionNotFold(false).playerId;
         }
         return action;
     }
@@ -403,8 +389,6 @@ class HistoryPlayer {
         }
         if (hasStart) {
             this._street = this._history.street;
-            this._streetHighAmount = this._stack.bb;
-            this._streeLastPlayerId = this.getLastActionNotFold(false).playerId;
             this._streetHighAmount = this.getLastActionNotFold(true) ? this.getLastActionNotFold(true).amount : 0;
         }
         else {
@@ -413,7 +397,6 @@ class HistoryPlayer {
             this._streetHighAmount = this._stack.bb;
             let sbPlayer = this.getNestPlayerData(this._buttonPlayerId);
             let bbPlayer = this.getNestPlayerData(sbPlayer.player.id);
-            this._streeLastPlayerId = bbPlayer.player.id;
         }
     }
     getPodsAmount() {
@@ -632,32 +615,6 @@ class HistoryPlayer {
             }
         }
         return null;
-    }
-    /**
-     * 转到下一轮
-     */
-    changeStreet() {
-        let curStreet = this._street;
-        switch (curStreet) {
-            case Define_1.Street.PREFLOP:
-                this._street = Define_1.Street.FLOP;
-                break;
-            case Define_1.Street.FLOP:
-                this._street = Define_1.Street.TURN;
-                break;
-            case Define_1.Street.TURN:
-                this._street = Define_1.Street.RIVER;
-                break;
-            case Define_1.Street.RIVER: //this.endGame()
-                break;
-            default:
-                break;
-        }
-        for (let playerId in this._playerDataDic) {
-            this._playerDataDic[playerId].streetBetAmount = 0;
-        }
-        this._streeLastPlayerId = "";
-        this._streetHighAmount = 0;
     }
     getBoardCardGroup() {
         let cards = [];

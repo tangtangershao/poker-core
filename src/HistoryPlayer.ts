@@ -127,7 +127,9 @@ export  class HistoryPlayer {
    * 如果当前街不允许行动，则返回空
    */
   getCurrentPlayerStatus():PlayerStatus{
-    let nextPlayer = this.getNextPlayerCurStreet()
+    let nextId = this.getNestActionPlayerId()
+    if(!nextId) return null
+    let nextPlayer =this._playerDataDic[nextId]
     if(nextPlayer)
     {
       let playeStatus = new PlayerStatus()
@@ -150,7 +152,9 @@ export  class HistoryPlayer {
     let player = this._playerDataDic[playerId]
     if(player)
     {
-      let nextPlayer = this.getNextPlayerCurStreet()
+      let nextId = this.getNestActionPlayerId()
+      if(!nextId) return null
+      let nextPlayer =this._playerDataDic[nextId]
       let playeStatus = new PlayerStatus()
       playeStatus.playerId = parseInt(player.player.id)
       playeStatus.money = player.player.money
@@ -246,105 +250,118 @@ export  class HistoryPlayer {
     this._history.playerCollects = playePondWin
   }
 
+  /**
+   * 设置街
+   */
+  setStreet (street: Street)
+  {
+    this._street = street
+    for (let playerId in this._playerDataDic)
+    {
+      this._playerDataDic[playerId].streetBetAmount = 0
+    }
+    this._streetHighAmount = 0
+  }
+
   private getPlayerPostion(playerId:string):Position
   {
-      let players = this._history.players
-      let btnPlayer = this._history.buttenPlayerId
-      let playerIndex  = 0
-      let btnplayerIndex = 0
-      for(let i = 0;i<players.length;i++)
-      {
-          if(players[i].id === btnPlayer)
-          btnplayerIndex = i
-          if(players[i].id === playerId)
-          playerIndex = i
-      }
-      let cha = Math.abs(btnplayerIndex - playerIndex) 
-      let pos = Position.button + cha
-      if(pos > Position.button)
-      pos = pos -5
-      return pos
+    let players = this._history.players
+    let btnPlayer = this._history.buttenPlayerId
+    let playerIndex  = 0
+    let btnplayerIndex = 0
+    for(let i = 0;i<players.length;i++)
+    {
+      if(players[i].id === btnPlayer)
+      btnplayerIndex = i
+      if(players[i].id === playerId)
+      playerIndex = i
+    }
+    let cha = Math.abs(btnplayerIndex - playerIndex) 
+    let pos = Position.button + cha
+    if(pos > Position.button)
+    pos = pos -5
+    return pos
   }
 
   private getPlayerrelactivePosition(playerId:string):RelactivePosition
   {
     if(this._playerDataDic[playerId].lastActType === ActionType.FOLD || 
       this._playerDataDic[playerId].lastActType === ActionType.ALLIN)
+    {
+      return -1
+    }
+    let streetAction = []
+    for (let i = this._actions.length - 1; i > 0; i--)
+    {
+      let action = this._actions[i]
+      if (action.street === this._street) 
       {
-        return -1
+        streetAction.push(action)
       }
-      let streetAction = []
-      for (let i = this._actions.length - 1; i > 0; i--)
+    }
+    let actionOne = null
+    let letfPlayer :{[playerId: string]: number}={}
+    for (let playerId in this._playerDataDic)
+    {
+      if(this._playerDataDic[playerId].lastActType !== ActionType.FOLD && 
+      this._playerDataDic[playerId].lastActType !== ActionType.ALLIN) 
+        letfPlayer[playerId] = ( this._playerDataDic[playerId].index)
+    }
+    if(streetAction.length === 0)
+    {
+      actionOne = this.getNextPlayer().player.id
+    }
+    else
+    {
+      actionOne = streetAction[streetAction.length -1].playerId
+      for (let i = streetAction.length - 1; i > 0; i--)
       {
-        let action = this._actions[i]
-        if (action.street === this._street) 
+        if(streetAction[i].type ==  ActionType.FOLD || ActionType.ALLIN)
         {
-          streetAction.push(action)
+          letfPlayer[ streetAction[i].playerId] = (this._playerDataDic[streetAction[i].playerId].index)
         }
       }
-      let actionOne = null
-      let letfPlayer :{[playerId: string]: number}={}
-      for (let playerId in this._playerDataDic)
-      {
-        if(this._playerDataDic[playerId].lastActType !== ActionType.FOLD && 
-        this._playerDataDic[playerId].lastActType !== ActionType.ALLIN) 
-          letfPlayer[playerId] = ( this._playerDataDic[playerId].index)
-      }
-      if(streetAction.length === 0)
-      {
-        actionOne = this.getNextPlayer().player.id
-      }
-      else
-      {
-        actionOne = streetAction[streetAction.length -1].playerId
-        for (let i = streetAction.length - 1; i > 0; i--)
-        {
-          if(streetAction[i].type ==  ActionType.FOLD || ActionType.ALLIN)
-          {
-            letfPlayer[ streetAction[i].playerId] = (this._playerDataDic[streetAction[i].playerId].index)
-          }
-        }
-      }
-    
-      if(playerId === actionOne )
-        return RelactivePosition.ep
-      _.sortBy(letfPlayer,[function (o: any) { return o.index }])
+    }
+  
+    if(playerId === actionOne )
+      return RelactivePosition.ep
+    _.sortBy(letfPlayer,[function (o: any) { return o.index }])
 
-      let index = 0
-      let actiononeindex = 0
-      let newLeftPlayer = []
-      for (let playerId in letfPlayer)
+    let index = 0
+    let actiononeindex = 0
+    let newLeftPlayer = []
+    for (let playerId in letfPlayer)
+    {
+      if(playerId = actionOne)
       {
-        if(playerId = actionOne)
-        {
-          actiononeindex = index
-        }
-        newLeftPlayer.push(playerId)
-        index  = index + 1
+        actiononeindex = index
       }
-      let lastOne = null
-      if(actiononeindex===0)
-      {
-        lastOne = newLeftPlayer[index]
-      }
-      else
-      {
-        lastOne = newLeftPlayer[actiononeindex-1]
-      }
-      if(lastOne===playerId)
-      return RelactivePosition.mp
-      
-      return RelactivePosition.lp
+      newLeftPlayer.push(playerId)
+      index  = index + 1
+    }
+    let lastOne = null
+    if(actiononeindex===0)
+    {
+      lastOne = newLeftPlayer[index]
+    }
+    else
+    {
+      lastOne = newLeftPlayer[actiononeindex-1]
+    }
+    if(lastOne===playerId)
+    return RelactivePosition.mp
+    
+    return RelactivePosition.lp
   }
   
   private getminiRaiseAmount(playerId:string):number
   {
-      let num = this._streetHighAmount
-      if(num === 0)
-      {
-        num = this._stack.bb
-      }
-      return num*2
+    let num = this._streetHighAmount
+    if(num === 0)
+    {
+      num = this._stack.bb
+    }
+    return num*2
   }
 
   //#region 
@@ -358,7 +375,6 @@ export  class HistoryPlayer {
 
   private _boardCards :string[] = []
   private _streetHighAmount: number // 此轮最高投入
-  private _streeLastPlayerId: string // 此轮最后行动玩家
 
   private _playerDataDic: {[playerId: string]: PlayerData}
 
@@ -368,60 +384,31 @@ export  class HistoryPlayer {
     let nestPlayerId = this.getNestActionPlayerId()
     return this._playerDataDic[nestPlayerId]
   }
-  
-  private getNextPlayerCurStreet (): PlayerData {
-    if(this._streeLastPlayerId === '' && this._streetHighAmount === 0)
-    return null
-    let nestPlayerId = this.getNestActionPlayerId()
-    return this._playerDataDic[nestPlayerId]
-  }
 
   private Bet (playerId: string,amount: number): Action {
     let player = this.getPlayerData(playerId)
-      let action = this.recordAction(playerId,ActionType.BET,amount)
-      player.player.deductMoney(amount)
-      this._streetHighAmount = amount
-      this._streeLastPlayerId = this.getLastActionNotFold(false).playerId
-      return action
+    let action = this.recordAction(playerId,ActionType.BET,amount)
+    player.player.deductMoney(amount)
+    this._streetHighAmount = amount
+    return action
   }
   
   private Raise (playerId: string,amount: number): Action {
     let player = this.getPlayerData(playerId)
-      let action = this.recordAction(playerId,ActionType.RAISE,amount)
-      player.player.deductMoney(amount)
-      this._streetHighAmount = amount
-      this._streeLastPlayerId = this.getLastActionNotFold(false).playerId
-      return action
+    let action = this.recordAction(playerId,ActionType.RAISE,amount)
+    player.player.deductMoney(amount)
+    this._streetHighAmount = amount
+    return action
   }
 
   private Check (playerId: string): Action {
     let action = this.recordAction(playerId,ActionType.CHECK)
-    if(this._streetHighAmount===0 && this._streeLastPlayerId==='')
-    {
-      this._streeLastPlayerId = this.getLastActionNotFold(false).playerId
-    }
-    if(this.getNextPlayer())
-    {
-      let nextPlayer = this.getNextPlayer() 
-      if(nextPlayer.player.id === this._streeLastPlayerId )
-      {
-        this.changeStreet()
-      }
-    }
     return action
   }
 
   private Fold (playerId: string): Action {
     let player = this.getPlayerData(playerId)
     let action = this.recordAction(playerId,ActionType.FOLD)
-    if(this.getNextPlayer())
-    {
-      let nextPlayer = this.getNextPlayer() 
-      if(nextPlayer.player.id === this._streeLastPlayerId )
-      {
-        this.changeStreet()
-      }
-    }
     return action
   }
 
@@ -430,14 +417,6 @@ export  class HistoryPlayer {
     let amount = this._streetHighAmount - player.streetBetAmount
     let action = this.recordAction(playerId,ActionType.CALL,amount)
     player.player.deductMoney(amount)
-    if(this.getNextPlayer())
-    {
-      let nextPlayer = this.getNextPlayer() 
-      if(nextPlayer.player.id === this._streeLastPlayerId )
-      {
-        this.changeStreet()
-      }
-    }
     return action
   }
   
@@ -449,20 +428,19 @@ export  class HistoryPlayer {
     if (amount > this._streetHighAmount)
     {
       this._streetHighAmount = amount
-      this._streeLastPlayerId = this.getLastActionNotFold(false).playerId
     }
     return action
   }
 
   private setGame(hasStart = false)
   {
-    let players :Player[] = []
+    let players: Player[] = []
     this._history.players.forEach(element => {
       let player = new Player(element.id,element.money,element.seat,element.misc)
       players.push(player)
     });
     this._rule = this._history.rule
-   
+
     this._players = players
     this._actions = []
     if(hasStart)
@@ -501,8 +479,6 @@ export  class HistoryPlayer {
     if(hasStart)
     {
       this._street = this._history.street
-      this._streetHighAmount = this._stack.bb
-      this._streeLastPlayerId = this.getLastActionNotFold(false).playerId
       this._streetHighAmount =  this.getLastActionNotFold(true)?  this.getLastActionNotFold(true).amount:0
     }
     else
@@ -512,7 +488,6 @@ export  class HistoryPlayer {
       this._streetHighAmount = this._stack.bb
       let sbPlayer = this.getNestPlayerData(this._buttonPlayerId)
       let bbPlayer = this.getNestPlayerData(sbPlayer.player.id)
-      this._streeLastPlayerId = bbPlayer.player.id
     }
   }
   
@@ -522,7 +497,7 @@ export  class HistoryPlayer {
     let pondBases = []
     for (let str in this._pondsDic)
     {
-      pondBases.push(this._pondsDic[str].max) 
+      pondBases.push(this._pondsDic[str].max)
     }
     pondBases = _.sortedUniq(pondBases)
     pondBases = _.sortBy(pondBases)
@@ -561,7 +536,7 @@ export  class HistoryPlayer {
   {
     let sbPlayer = this.getNestPlayerData(this._buttonPlayerId)
     let bbPlayer = this.getNestPlayerData(sbPlayer.player.id)
-    
+
     sbPlayer.player.deductMoney(this._stack.sb)
     this.recordAction(sbPlayer.player.id,ActionType.SB,this._stack.sb)
     bbPlayer.player.deductMoney(this._stack.bb)
@@ -763,32 +738,6 @@ export  class HistoryPlayer {
     return null
   }
 
-  /**
-   * 转到下一轮
-   */
-  private changeStreet ()
-  {
-    let curStreet = this._street
-    switch (curStreet)
-    {
-      case Street.PREFLOP: this._street = Street.FLOP
-        break
-      case Street.FLOP: this._street = Street.TURN
-        break
-      case Street.TURN: this._street = Street.RIVER
-        break
-      case Street.RIVER:  //this.endGame()
-        break
-      default:
-        break
-    }
-    for (let playerId in this._playerDataDic)
-    {
-      this._playerDataDic[playerId].streetBetAmount = 0
-    }
-    this._streeLastPlayerId = ""
-    this._streetHighAmount = 0
-  }
 
   private getBoardCardGroup (): string[]
   {
@@ -811,7 +760,7 @@ export  class HistoryPlayer {
 class PondsData
 {
   max:number                  //池子最大注
-  base:number             
+  base:number
 }
 
 class PlayerData

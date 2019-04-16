@@ -91,6 +91,10 @@ export declare class HistoryPlayer {
     }, playerWins: {
         [playerId: string]: number;
     }): any;
+    /**
+     * 设置街
+     */
+    setStreet(street: Street): void;
     private getPlayerPostion;
     private getPlayerrelactivePosition;
     private getminiRaiseAmount;
@@ -103,11 +107,9 @@ export declare class HistoryPlayer {
     private _stack;
     private _boardCards;
     private _streetHighAmount;
-    private _streeLastPlayerId;
     private _playerDataDic;
     private _pondsDic;
     private getNextPlayer;
-    private getNextPlayerCurStreet;
     private Bet;
     private Raise;
     private Check;
@@ -148,9 +150,5 @@ export declare class HistoryPlayer {
      * 获取上次有效行动（盖牌和每轮开始 返回空行动 因为无法用来判定下次行动）
      */
     private getLastActionNotFold;
-    /**
-     * 转到下一轮
-     */
-    private changeStreet;
     private getBoardCardGroup;
 }
