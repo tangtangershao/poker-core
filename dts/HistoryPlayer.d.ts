@@ -1,4 +1,4 @@
-import { Street, History, PlayerStatus, Action, StreetStatus, HistoryPlayerOptions } from "./Define";
+import { Street, History, PlayerStatus, Action, StreetStatus, GameResult, HistoryPlayerOptions } from './Define';
 export declare class HistoryPlayer {
     private _history;
     constructor(options: HistoryPlayerOptions | History);
@@ -95,6 +95,8 @@ export declare class HistoryPlayer {
      * 设置街
      */
     setStreet(street: Street): void;
+    /**获取结算 */
+    getGameResult(): GameResult;
     private getPlayerPostion;
     private getPlayerrelactivePosition;
     private getminiRaiseAmount;

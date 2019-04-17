@@ -11,4 +11,4 @@ export { HandRank } from './HandRank';
 export { HandEquity, OddsCalculator } from './OddsCalculator';
 export { HistoryPlayer } from './HistoryPlayer';
 export { ActionType, Street, Action,Stack,Position,
-     RelactivePosition,History,HistoryPlayerOptions ,PlayerStatus,StreetStatus} from './Define'; 
+     RelactivePosition,History,HistoryPlayerOptions ,GameResult,PlayerStatus,StreetStatus} from './Define'; 

@@ -45,6 +45,16 @@ export declare enum RelactivePosition {
     mp = 1,
     lp = 2
 }
+export interface GameResult {
+    pot: number;
+    rake: number;
+    playerWins: {
+        [playerId: string]: number;
+    };
+    playerCollects: {
+        [playerId: string]: number;
+    };
+}
 /**
  * 牌局记录
  */

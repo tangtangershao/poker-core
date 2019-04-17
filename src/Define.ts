@@ -58,6 +58,14 @@ export enum RelactivePosition{
   lp,       // 后位  我是最后一个行动的
 }
 
+export interface GameResult{
+  pot:number    // 总底池
+  rake:number   // 总共抽水
+  // 玩家赢了多少钱
+  playerWins:{[playerId: string]: number}
+  // 玩家从池子里分到多少钱
+  playerCollects:{[playerId: string]: number}
+}
 
 /**
  * 牌局记录

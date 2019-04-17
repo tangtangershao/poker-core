@@ -120,6 +120,7 @@ class HistoryPlayer {
             playeStatus.playerId = parseInt(nextPlayer.player.id);
             playeStatus.money = nextPlayer.player.money;
             playeStatus.isMyTurn = true;
+            playeStatus.seat = nextPlayer.player.seat;
             playeStatus.position = this.getPlayerPostion(nextPlayer.player.id);
             playeStatus.relactivePosition = this.getPlayerrelactivePosition(nextPlayer.player.id);
             playeStatus.miniRaiseAmount = this.getminiRaiseAmount(nextPlayer.player.id);
@@ -135,13 +136,11 @@ class HistoryPlayer {
         let player = this._playerDataDic[playerId];
         if (player) {
             let nextId = this.getNestActionPlayerId();
-            if (!nextId)
-                return null;
-            let nextPlayer = this._playerDataDic[nextId];
             let playeStatus = new Define_1.PlayerStatus();
             playeStatus.playerId = parseInt(player.player.id);
             playeStatus.money = player.player.money;
-            playeStatus.isMyTurn = nextPlayer.player.id === playerId ? true : false;
+            playeStatus.seat = player.player.seat;
+            playeStatus.isMyTurn = player.player.id === nextId ? true : false;
             playeStatus.position = this.getPlayerPostion(player.player.id);
             playeStatus.relactivePosition = this.getPlayerrelactivePosition(player.player.id);
             playeStatus.miniRaiseAmount = playeStatus.isMyTurn ? this.getminiRaiseAmount(player.player.id) : 0;
@@ -233,6 +232,26 @@ class HistoryPlayer {
         }
         this._streetHighAmount = 0;
     }
+    /**获取结算 */
+    getGameResult() {
+        let amount = 0;
+        for (let i = 0; i < this._history.actions.length; i++) {
+            let item = this._history.actions[i];
+            amount = amount + item.amount;
+        }
+        let getamount = 0;
+        for (let playerId in this._history.playerCollects) {
+            let value = this._history.playerCollects[playerId];
+            getamount = getamount + value;
+        }
+        let result = {
+            pot: amount,
+            rake: amount - getamount,
+            playerWins: this._history.playerWins,
+            playerCollects: this._history.playerCollects
+        };
+        return result;
+    }
     getPlayerPostion(playerId) {
         let players = this._history.players;
         let btnPlayer = this._history.buttenPlayerId;
@@ -244,7 +263,7 @@ class HistoryPlayer {
             if (players[i].id === playerId)
                 playerIndex = i;
         }
-        let cha = Math.abs(btnplayerIndex - playerIndex);
+        let cha = (btnplayerIndex - playerIndex);
         let pos = Define_1.Position.button + cha;
         if (pos > Define_1.Position.button)
             pos = pos - 5;
@@ -458,7 +477,6 @@ class HistoryPlayer {
      * @param playerId 玩家id
      */
     getNestPlayerData(playerId) {
-        console.log('playerId  ', playerId);
         let index = this._playerDataDic[playerId].index;
         index = index + 1;
         if (index === this._players.length) {
