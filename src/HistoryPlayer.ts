@@ -96,6 +96,7 @@ export  class HistoryPlayer {
    */
   setFlopCards(cards:string[]){
     this._boardCards = cards
+    this._history.BoardCards = this._boardCards
   }
 
   /**
@@ -104,6 +105,7 @@ export  class HistoryPlayer {
    */
   setTurnCards(card:string){
     this._boardCards.push(card)
+    this._history.BoardCards = this._boardCards
   }
 
   /**
@@ -112,6 +114,7 @@ export  class HistoryPlayer {
    */
   setRiverCards(card:string){
     this._boardCards.push(card)
+    this._history.BoardCards = this._boardCards
   }
 
   /**
@@ -256,6 +259,7 @@ export  class HistoryPlayer {
   setStreet (street: Street)
   {
     this._street = street
+    this._history.street = street
     for (let playerId in this._playerDataDic)
     {
       this._playerDataDic[playerId].streetBetAmount = 0
@@ -269,17 +273,17 @@ export  class HistoryPlayer {
     let btnPlayer = this._history.buttenPlayerId
     let playerIndex  = 0
     let btnplayerIndex = 0
-    for(let i = 0;i<players.length;i++)
+    for(let i = 0;i < players.length;i++)
     {
       if(players[i].id === btnPlayer)
-      btnplayerIndex = i
+        btnplayerIndex = i
       if(players[i].id === playerId)
-      playerIndex = i
+        playerIndex = i
     }
-    let cha = Math.abs(btnplayerIndex - playerIndex) 
+    let cha = Math.abs(btnplayerIndex - playerIndex)
     let pos = Position.button + cha
     if(pos > Position.button)
-    pos = pos -5
+      pos = pos -5
     return pos
   }
 
@@ -616,6 +620,7 @@ export  class HistoryPlayer {
     let betAmount = playerData.betAmount + action.amount
     playerData.betAmount = betAmount
     this.setPonds(action)
+    this._history.actions = this._actions
     return action
   }
 

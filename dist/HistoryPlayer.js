@@ -81,6 +81,7 @@ class HistoryPlayer {
      */
     setFlopCards(cards) {
         this._boardCards = cards;
+        this._history.BoardCards = this._boardCards;
     }
     /**
      * 设置转牌圈的牌
@@ -88,6 +89,7 @@ class HistoryPlayer {
      */
     setTurnCards(card) {
         this._boardCards.push(card);
+        this._history.BoardCards = this._boardCards;
     }
     /**
      * 设置河牌圈的牌
@@ -95,6 +97,7 @@ class HistoryPlayer {
      */
     setRiverCards(card) {
         this._boardCards.push(card);
+        this._history.BoardCards = this._boardCards;
     }
     /**
      * 获取公共牌
@@ -224,6 +227,7 @@ class HistoryPlayer {
      */
     setStreet(street) {
         this._street = street;
+        this._history.street = street;
         for (let playerId in this._playerDataDic) {
             this._playerDataDic[playerId].streetBetAmount = 0;
         }
@@ -507,6 +511,7 @@ class HistoryPlayer {
         let betAmount = playerData.betAmount + action.amount;
         playerData.betAmount = betAmount;
         this.setPonds(action);
+        this._history.actions = this._actions;
         return action;
     }
     setPonds(act) {
